@@ -211,4 +211,7 @@ public sealed record AssetResponse(
     string Tipo,
     int? OdometroAtual,
     string? Notas,
-    JsonElement? StatusAgregado);
+    string? StatusAgregado,
+    int? Overdue,
+    int? DueSoon,
+    int? Ok);

@@ -267,8 +267,8 @@ public sealed record TemplateResponse(
     decimal? CustoEstimado,
     int? BaselineOdometro,
     DateOnly? BaselineData,
-    JsonElement? Status,
-    JsonElement? KmRemaining,
-    JsonElement? DateDue);
+    string? Status,
+    int? KmRemaining,
+    DateOnly? DateDue);
 
 public sealed record ValidationProblemBody(Dictionary<string, string[]>? Errors);
