@@ -7,3 +7,5 @@ docs/
 tests/
 README.md
 .env*
+web/node_modules/
+web/dist/

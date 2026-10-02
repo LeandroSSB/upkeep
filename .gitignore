@@ -8,6 +8,10 @@ artifacts/
 TestResults/
 *.binlog
 
+# ===== Web (upkeep-web) =====
+node_modules/
+web/dist/
+
 
 .claude/
 CLAUDE.md

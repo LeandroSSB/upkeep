@@ -136,6 +136,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
+// SPA: estáticos do wwwroot (preenchido no build Docker pelo stage node) e
+// fallback p/ as rotas do router. Sem wwwroot (tests/dev) é no-op: endpoints da
+// API e /health continuam intactos — o fallback só pega paths não-mapeados.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapOpenApi();
 if (!app.Environment.IsProduction())
     app.MapScalarApiReference(); // /scalar — docs interativas fora de produção
@@ -152,6 +158,10 @@ app.MapAssetEndpoints();
 app.MapTemplateEndpoints();
 app.MapServiceEndpoints();
 app.MapReportEndpoints();
+
+// Fallback SPA por último: index.html p/ rotas não-mapeadas ({*path:nonfile}
+// ignora paths com extensão — assets inexistentes seguem 404, não HTML).
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
