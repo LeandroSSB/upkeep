@@ -3,6 +3,7 @@ using Scalar.AspNetCore;
 using Upkeep.Api.Assets;
 using Upkeep.Api.Auth;
 using Upkeep.Api.Export;
+using Upkeep.Api.Import;
 using Upkeep.Api.Me;
 using Upkeep.Api.Middleware;
 using Upkeep.Api.Reports;
@@ -60,6 +61,7 @@ public static class WebApplicationExtensions
         app.MapServiceEndpoints();
         app.MapReportEndpoints();
         app.MapExportEndpoints();
+        app.MapImportEndpoints();
 
         // /api/* desconhecido deve ser 404 JSON, nunca o fallback do SPA. O request pode
         // chegar aqui por dois caminhos:
