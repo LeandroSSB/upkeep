@@ -8,7 +8,7 @@ artifacts/
 TestResults/
 *.binlog
 
-# ===== Contexto exclusivo desta máquina (NUNCA commitar — repo público) =====
+
 .claude/
 CLAUDE.md
 docs/superpowers/plans/
