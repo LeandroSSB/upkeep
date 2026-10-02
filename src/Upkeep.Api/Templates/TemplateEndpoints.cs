@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Upkeep;
+using Upkeep.Api.Assets;
 using Upkeep.Api.Auth;
 using Upkeep.Api.Common;
 using Upkeep.Infrastructure;
@@ -25,7 +26,10 @@ public sealed record UpdateTemplateRequest(
     int? BaselineOdometro,
     DateOnly? BaselineData) : ITemplateRequest;
 
-/// <summary>Resposta de template. status/kmRemaining/dateDue entram na Task 10 — por ora sempre null (chaves presentes).</summary>
+/// <summary>
+/// Resposta de template. status/kmRemaining/dateDue são preenchidos pelo IStatusService
+/// no GET por asset (Task 10); demais endpoints seguem com as chaves presentes e null.
+/// </summary>
 public sealed record TemplateResponse(
     Guid Id,
     Guid AssetId,
@@ -36,14 +40,14 @@ public sealed record TemplateResponse(
     decimal? CustoEstimado,
     int? BaselineOdometro,
     DateOnly BaselineData,
-    object? Status,
-    object? KmRemaining,
-    object? DateDue)
+    string? Status,
+    int? KmRemaining,
+    DateOnly? DateDue)
 {
-    public static TemplateResponse From(MaintenanceTemplate t) =>
+    public static TemplateResponse From(MaintenanceTemplate t, TemplateStatusDto? status = null) =>
         new(t.Id, t.AssetId, t.Titulo, t.Categoria, t.IntervaloKm, t.IntervaloMeses,
             t.CustoEstimado, t.BaselineOdometro, t.BaselineData,
-            Status: null, KmRemaining: null, DateDue: null);
+            status?.Status, status?.KmRemaining, status?.DateDue);
 }
 
 public static class TemplateEndpoints
@@ -53,14 +57,18 @@ public static class TemplateEndpoints
         var nested = app.MapGroup("/assets/{assetId}/templates").WithTags("Templates").RequireAuthorization();
         var direct = app.MapGroup("/templates").WithTags("Templates").RequireAuthorization();
 
-        nested.MapGet("", async (Guid assetId, UpkeepDbContext db, ClaimsPrincipal user) =>
+        nested.MapGet("", async (Guid assetId, UpkeepDbContext db, IStatusService statusService,
+            ClaimsPrincipal user, CancellationToken ct) =>
         {
             var userId = user.GetUserId();
-            if (!await db.Assets.AnyAsync(a => a.Id == assetId && a.UserId == userId))
+            if (!await db.Assets.AnyAsync(a => a.Id == assetId && a.UserId == userId, ct))
                 return Results.NotFound(); // asset alheio não vaza — 404, não lista vazia
 
-            var templates = await db.Templates.Where(t => t.AssetId == assetId).ToListAsync();
-            return Results.Ok(templates.Select(TemplateResponse.From));
+            var templates = await db.Templates.Where(t => t.AssetId == assetId).ToListAsync(ct);
+            var statuses = await statusService.GetTemplateStatusesAsync(assetId, userId, ct);
+            var statusById = statuses.ToDictionary(s => s.TemplateId);
+            return Results.Ok(templates.Select(t =>
+                TemplateResponse.From(t, statusById.GetValueOrDefault(t.Id))));
         });
 
         nested.MapPost("", async (Guid assetId, CreateTemplateRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>

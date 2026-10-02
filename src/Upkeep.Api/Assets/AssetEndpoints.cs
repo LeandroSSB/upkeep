@@ -13,11 +13,20 @@ public static class AssetEndpoints
     {
         var group = app.MapGroup("/assets").WithTags("Assets").RequireAuthorization();
 
-        group.MapGet("", async (UpkeepDbContext db, ClaimsPrincipal user) =>
+        group.MapGet("", async (UpkeepDbContext db, IStatusService statusService, ClaimsPrincipal user,
+            CancellationToken ct) =>
         {
             var userId = user.GetUserId();
-            var assets = await db.Assets.Where(a => a.UserId == userId).ToListAsync();
-            return Results.Ok(assets.Select(AssetResponse.From));
+            var assets = await db.Assets.Where(a => a.UserId == userId).ToListAsync(ct);
+
+            // status por asset na v1 (N de assets é pequeno); batch se um dia pesar
+            var result = new List<AssetResponse>(assets.Count);
+            foreach (var asset in assets)
+            {
+                var status = await statusService.GetAssetStatusAsync(asset.Id, userId, ct);
+                result.Add(AssetResponse.From(asset, status));
+            }
+            return Results.Ok(result);
         });
 
         group.MapPost("", async (CreateAssetRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>

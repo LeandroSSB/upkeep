@@ -6,17 +6,24 @@ public sealed record CreateAssetRequest(string Nome, string Tipo, int? OdometroA
 public sealed record UpdateAssetRequest(string Nome, string? Notas);
 public sealed record UpdateOdometerRequest(int Odometer);
 
-/// <summary>Resposta de asset. statusAgregado entra na Task 10 — por ora sempre null (chave presente).</summary>
+/// <summary>
+/// Resposta de asset. statusAgregado/overdue/dueSoon/ok são preenchidos pelo IStatusService
+/// no GET /assets (Task 10); demais endpoints seguem com as chaves presentes e null.
+/// </summary>
 public sealed record AssetResponse(
     Guid Id,
     string Nome,
     string Tipo,
     int? OdometroAtual,
     string? Notas,
-    object? StatusAgregado)
+    string? StatusAgregado,
+    int? Overdue,
+    int? DueSoon,
+    int? Ok)
 {
-    public static AssetResponse From(Asset a) =>
-        new(a.Id, a.Nome, a.Tipo.ToApiString(), a.OdometroAtual, a.Notas, StatusAgregado: null);
+    public static AssetResponse From(Asset a, AssetStatusDto? status = null) =>
+        new(a.Id, a.Nome, a.Tipo.ToApiString(), a.OdometroAtual, a.Notas,
+            status?.Status, status?.Overdue, status?.DueSoon, status?.Ok);
 }
 
 public static class AssetTipoApi
