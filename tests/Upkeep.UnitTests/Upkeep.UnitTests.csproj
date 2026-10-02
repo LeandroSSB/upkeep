@@ -12,6 +12,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Upkeep.Api\Upkeep.Api.csproj" />
     <ProjectReference Include="..\..\src\Upkeep.Core\Upkeep.Core.csproj" />
   </ItemGroup>
 </Project>
