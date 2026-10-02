@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Upkeep.Infrastructure;
@@ -18,15 +17,17 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.ConfigureAppConfiguration((_, cfg) => cfg.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            ["ConnectionStrings:Upkeep"] = _db.GetConnectionString(),
-            ["Jwt:Key"] = "chave-de-teste-bem-longa-com-256-bits-minimo!!",
-            ["Jwt:Issuer"] = "upkeep-tests",
-            ["Jwt:Audience"] = "upkeep-tests",
-            ["AccessTokens:Minutes"] = "15",
-            ["RefreshTokens:Days"] = "7"
-        }));
+        // Overrides must go via UseSetting (host configuration): WebApplicationFactory's
+        // DeferredHostBuilder passes host settings to the minimal-API entry point as
+        // command-line args, so they are visible to builder.Configuration in Program.cs.
+        // ConfigureAppConfiguration is replayed only at Build time — too late for the
+        // eager GetConnectionString("Upkeep") read.
+        builder.UseSetting("ConnectionStrings:Upkeep", _db.GetConnectionString());
+        builder.UseSetting("Jwt:Key", "chave-de-teste-bem-longa-com-256-bits-minimo!!");
+        builder.UseSetting("Jwt:Issuer", "upkeep-tests");
+        builder.UseSetting("Jwt:Audience", "upkeep-tests");
+        builder.UseSetting("AccessTokens:Minutes", "15");
+        builder.UseSetting("RefreshTokens:Days", "7");
         builder.UseSetting("webroot", "");
     }
 
