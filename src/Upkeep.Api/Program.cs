@@ -44,7 +44,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>()
 builder.Services.Configure<NtfyOptions>(builder.Configuration.GetSection("Ntfy"));
 var ntfy = builder.Configuration.GetSection("Ntfy").Get<NtfyOptions>() ?? new NtfyOptions();
 builder.Services.AddSingleton(ntfy); // instância bindada p/ DueReminderService
-builder.Services.AddHttpClient("ntfy");
+// 30s: durante outage do ntfy.sh cada POST pararia até 100s (default) — varredura
+// sequencial por usuário ficaria N×100s; timeout curto + isolamento por usuário.
+builder.Services.AddHttpClient("ntfy").SetTimeout(TimeSpan.FromSeconds(30));
 builder.Services.AddScoped<INotificationService, DueReminderService>();
 if (ntfy.Enabled)
     builder.Services.AddHostedService<NtfyReminderWorker>();

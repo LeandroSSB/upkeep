@@ -13,7 +13,8 @@ public static class AuthEndpoints
         var group = app.MapGroup("/auth").WithTags("Auth").RequireRateLimiting("auth");
 
         group.MapPost("/register",
-            async (RegisterRequest req, UpkeepDbContext db, IPasswordHasher hasher, ITokenService tokens) =>
+            async (RegisterRequest req, UpkeepDbContext db, IPasswordHasher hasher, ITokenService tokens,
+                ILoggerFactory loggerFactory) =>
         {
             var email = req.Email.Trim().ToLowerInvariant();
             if (await db.Users.AnyAsync(u => u.Email == email))
@@ -34,10 +35,14 @@ public static class AuthEndpoints
             {
                 await db.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
                 // race do check-then-insert: duas requests passaram pelo AnyAsync juntas,
-                // o unique index derruba a segunda → mesmo 409 do caminho feliz
+                // o unique index derruba a segunda → mesmo 409 do caminho feliz.
+                // Log: qualquer outra DbUpdateException aqui também viraria 409 —
+                // sem isso seria indistinguível de "e-mail já existe".
+                loggerFactory.CreateLogger("Auth")
+                    .LogWarning(ex, "register: DbUpdateException → 409 (email {Email})", email);
                 return Results.Conflict(new { title = "E-mail já cadastrado" });
             }
             return Results.Created($"/users/{user.Id}",
