@@ -12,12 +12,26 @@ public sealed class NtfyReminderWorker(
     ILogger<NtfyReminderWorker> logger,
     IOptions<NtfyOptions> ntfy) : BackgroundService
 {
+    // Clamp defensivo 0-23: config fora do intervalo (ex.: CheckHourUtc=25) não derruba
+    // o boot — ajusta para o equivalente dentro do dia e avisa no log.
+    private readonly int _checkHourUtc = ClampHour(ntfy.Value.CheckHourUtc, logger);
+
+    private static int ClampHour(int configured, ILogger<NtfyReminderWorker> log)
+    {
+        var hour = ((configured % 24) + 24) % 24;
+        if (hour != configured)
+            log.LogWarning(
+                "Ntfy:CheckHourUtc={Configurado} fora de 0-23 — usando {Ajustado} (UTC)",
+                configured, hour);
+        return hour;
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
             var now = DateTime.UtcNow;
-            var next = now.Date.AddHours(ntfy.Value.CheckHourUtc);
+            var next = now.Date.AddHours(_checkHourUtc);
             if (next <= now)
                 next = next.AddDays(1);
 

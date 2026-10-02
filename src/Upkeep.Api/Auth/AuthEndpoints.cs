@@ -18,7 +18,7 @@ public static class AuthEndpoints
         {
             var email = req.Email.Trim().ToLowerInvariant();
             if (await db.Users.AnyAsync(u => u.Email == email))
-                return Results.Conflict(new { title = "E-mail já cadastrado" });
+                return EmailJaCadastrado();
 
             var user = new User
             {
@@ -43,10 +43,12 @@ public static class AuthEndpoints
                 // sem isso seria indistinguível de "e-mail já existe".
                 loggerFactory.CreateLogger("Auth")
                     .LogWarning(ex, "register: DbUpdateException → 409 (email {Email})", email);
-                return Results.Conflict(new { title = "E-mail já cadastrado" });
+                return EmailJaCadastrado();
             }
-            return Results.Created($"/users/{user.Id}",
-                new { accessToken = access, refreshToken = refreshRaw, user = new { id = user.Id, email = user.Email } });
+            // 201 sem Location: /users/{id} não é rota da API — header apontaria p/ nada
+            return Results.Json(
+                new { accessToken = access, refreshToken = refreshRaw, user = new { id = user.Id, email = user.Email } },
+                statusCode: StatusCodes.Status201Created);
         }).AddEndpointFilter<ValidationFilter<RegisterRequest>>();
 
         group.MapPost("/login",
@@ -113,6 +115,12 @@ public static class AuthEndpoints
 
         return app;
     }
+
+    /// <summary>409 ProblemDetails (contrato de erro da API — mesmo shape em todos os endpoints).</summary>
+    private static IResult EmailJaCadastrado() => Results.Problem(
+        title: "E-mail já cadastrado",
+        statusCode: StatusCodes.Status409Conflict,
+        type: "https://upkeep.leandrossb.com/errors/conflict");
 }
 
 public static class ClaimsPrincipalExtensions

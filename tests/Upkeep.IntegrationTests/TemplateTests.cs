@@ -37,6 +37,7 @@ public class TemplateTests(ApiFixture fixture)
         var depois = DateOnly.FromDateTime(DateTime.UtcNow);
 
         Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        Assert.Null(resp.Headers.Location); // 201 sem Location: coleção só tem GET lista
 
         // placeholders Task 10: chaves presentes mesmo nulas
         var raw = await resp.Content.ReadAsStringAsync(ct);
@@ -150,6 +151,10 @@ public class TemplateTests(ApiFixture fixture)
         Assert.Contains("Informe intervalo_km e/ou intervalo_meses",
             string.Join("; ", problem.Errors.Values.SelectMany(v => v)));
 
+        // regra cross-field é keyed: "intervaloKm", nunca chave "" (inútil pro cliente)
+        Assert.Contains("intervaloKm", problem.Errors.Keys);
+        Assert.DoesNotContain("", problem.Errors.Keys);
+
         // PUT também exige intervalo
         var id = await CreateTemplateAsync(client, assetId, ct);
         var put = await client.PutAsJsonAsync($"/templates/{id}",
@@ -192,6 +197,11 @@ public class TemplateTests(ApiFixture fixture)
         var cria = await client.PostAsJsonAsync($"/assets/{assetId}/templates",
             new { titulo = "Só meses", intervaloMeses = 6, baselineOdometro = 10_000 }, ct);
         Assert.Equal(HttpStatusCode.BadRequest, cria.StatusCode);
+
+        // 2ª regra cross-field também keyed ("intervaloKm" — o campo faltante), sem ""
+        var problem = await cria.Content.ReadFromJsonAsync<ValidationProblemBody>(Json, ct);
+        Assert.Contains("intervaloKm", problem!.Errors!.Keys);
+        Assert.DoesNotContain("", problem.Errors.Keys);
 
         // update: tirar o km mantendo baselineOdometro → 400
         var id = await CreateTemplateAsync(client, assetId, ct);

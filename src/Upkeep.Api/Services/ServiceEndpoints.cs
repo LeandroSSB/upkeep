@@ -80,7 +80,9 @@ public static class ServiceEndpoints
                 asset.OdometroAtual = req.Odometro.Value;
 
             await db.SaveChangesAsync();
-            return Results.Created($"/assets/{assetId}/services/{service.Id}", ServiceResponse.From(service));
+            // 201 sem Location: coleção só tem GET lista — não há rota de serviço único
+            return Results.Json(ServiceResponse.From(service),
+                statusCode: StatusCodes.Status201Created);
         }).AddEndpointFilter<ValidationFilter<CreateServiceRequest>>();
 
         return app;

@@ -49,7 +49,9 @@ public static class MeEndpoints
             u.NtfyTopic = string.IsNullOrWhiteSpace(req.NtfyTopic) ? null : req.NtfyTopic.Trim();
             await db.SaveChangesAsync(ct);
             return Results.Ok(new MeResponse(u.Id, u.Email, u.NtfyTopic));
-        }).AddEndpointFilter<ValidationFilter<NtfyTopicRequest>>();
+        })
+            .WithSummary("Define o tópico ntfy do usuário; null/vazio/whitespace limpa")
+            .AddEndpointFilter<ValidationFilter<NtfyTopicRequest>>();
 
         return group;
     }

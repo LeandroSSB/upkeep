@@ -28,15 +28,18 @@ internal static class TemplateRequestRules
         v.RuleFor(x => x.CustoEstimado).GreaterThanOrEqualTo(0).When(x => x.CustoEstimado.HasValue);
         v.RuleFor(x => x.BaselineOdometro).GreaterThanOrEqualTo(0).When(x => x.BaselineOdometro.HasValue);
 
-        // pelo menos um intervalo
+        // pelo menos um intervalo. OverridePropertyName: regra root (RuleFor(x => x))
+        // produziria errors com chave "" — inútil pro cliente; keyed no campo faltante
         v.RuleFor(x => x)
             .Must(t => t.IntervaloKm.HasValue || t.IntervaloMeses.HasValue)
-            .WithMessage("Informe intervalo_km e/ou intervalo_meses");
+            .WithMessage("Informe intervalo_km e/ou intervalo_meses")
+            .OverridePropertyName("intervaloKm");
 
         // baseline de odômetro só faz sentido com intervalo de km
         v.RuleFor(x => x)
             .Must(t => !t.BaselineOdometro.HasValue || t.IntervaloKm.HasValue)
-            .WithMessage("Baseline de odômetro só é permitido quando intervalo_km é informado");
+            .WithMessage("Baseline de odômetro só é permitido quando intervalo_km é informado")
+            .OverridePropertyName("intervaloKm");
     }
 }
 

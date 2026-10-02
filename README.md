@@ -71,7 +71,7 @@ docker compose up -d          # postgres + api
 
 # CI (GitHub Actions): build + testes com Testcontainers
 
-# deploy (futuro, megalan):
+# deploy (megalan — nginx versionado em deploy/nginx-site.conf.example; app em https://upkeep.leandrossb.com):
 docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.production up -d --build
 ```
 

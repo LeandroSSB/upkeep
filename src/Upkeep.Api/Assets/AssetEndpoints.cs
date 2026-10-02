@@ -48,7 +48,9 @@ public static class AssetEndpoints
             };
             db.Assets.Add(asset);
             await db.SaveChangesAsync();
-            return Results.Created($"/assets/{asset.Id}", AssetResponse.From(asset));
+            // 201 sem Location: GET /assets/{id} individual não existe (só a lista)
+            return Results.Json(AssetResponse.From(asset),
+                statusCode: StatusCodes.Status201Created);
         }).AddEndpointFilter<ValidationFilter<CreateAssetRequest>>();
 
         group.MapPut("/{id}", async (Guid id, UpdateAssetRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>
@@ -60,7 +62,9 @@ public static class AssetEndpoints
             asset.Notas = req.Notas;
             await db.SaveChangesAsync();
             return Results.Ok(AssetResponse.From(asset));
-        }).AddEndpointFilter<ValidationFilter<UpdateAssetRequest>>();
+        })
+            .WithSummary("Substitui o ativo — notas omitidas viram null (replace, não merge)")
+            .AddEndpointFilter<ValidationFilter<UpdateAssetRequest>>();
 
         group.MapDelete("/{id}", async (Guid id, UpkeepDbContext db, ClaimsPrincipal user) =>
         {

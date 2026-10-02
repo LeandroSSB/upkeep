@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Upkeep;
 using Upkeep.Api.Assets;
 using Upkeep.Api.Auth;
@@ -91,7 +92,9 @@ public static class TemplateEndpoints
             };
             db.Templates.Add(template);
             await db.SaveChangesAsync();
-            return Results.Created($"/assets/{assetId}/templates/{template.Id}", TemplateResponse.From(template));
+            // 201 sem Location: coleção só tem GET lista — não há rota /templates/{id} GET
+            return Results.Json(TemplateResponse.From(template),
+                statusCode: StatusCodes.Status201Created);
         }).AddEndpointFilter<ValidationFilter<CreateTemplateRequest>>();
 
         direct.MapPut("/{id}", async (Guid id, UpdateTemplateRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>
@@ -110,7 +113,9 @@ public static class TemplateEndpoints
             template.BaselineData = req.BaselineData ?? DateOnly.FromDateTime(DateTime.UtcNow);
             await db.SaveChangesAsync();
             return Results.Ok(TemplateResponse.From(template));
-        }).AddEndpointFilter<ValidationFilter<UpdateTemplateRequest>>();
+        })
+            .WithSummary("Substitui o template — campos omitidos viram null; baselineData null vira hoje")
+            .AddEndpointFilter<ValidationFilter<UpdateTemplateRequest>>();
 
         direct.MapDelete("/{id}", async (Guid id, UpkeepDbContext db, ClaimsPrincipal user) =>
         {
@@ -123,9 +128,14 @@ public static class TemplateEndpoints
             {
                 await db.SaveChangesAsync();
             }
-            catch (DbUpdateException) // FK Restrict no banco: há service_records vinculados
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23503" })
             {
-                return Results.Conflict(new { title = "Template possui serviços vinculados" });
+                // 23503 = FK violation (Restrict no banco): há service_records vinculados.
+                // Outros DbUpdateException não têm catch → 500 real pelo middleware.
+                return Results.Problem(
+                    title: "Template possui serviços vinculados",
+                    statusCode: StatusCodes.Status409Conflict,
+                    type: "https://upkeep.leandrossb.com/errors/conflict");
             }
             return Results.NoContent();
         });

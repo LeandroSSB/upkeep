@@ -1,3 +1,5 @@
+// UnreachableException: no .NET 10 mora em System.Diagnostics (era CodeAnalysis até o 9)
+using System.Diagnostics;
 using Upkeep;
 
 namespace Upkeep.Api.Assets;
@@ -40,11 +42,16 @@ public static class AssetTipoApi
         }
     }
 
-    /// <summary>Serializa o enum como string portuguesa lowercase (contrato da API).</summary>
+    /// <summary>
+    /// Serializa o enum como string portuguesa lowercase (contrato da API).
+    /// Switch exaustivo sem default silencioso: valor fora do enum vindo do banco
+    /// (impossível hoje — coluna é int com check de EF) estoura em vez de virar "aparelho".
+    /// </summary>
     public static string ToApiString(this AssetTipo tipo) => tipo switch
     {
         AssetTipo.Veiculo => "veiculo",
         AssetTipo.Casa => "casa",
-        _ => "aparelho"
+        AssetTipo.Aparelho => "aparelho",
+        _ => throw new UnreachableException()
     };
 }

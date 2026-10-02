@@ -74,4 +74,41 @@ public class ReminderTextTests
             [new DueItem("Gol", "Revisão", DueStatus.DueSoon, KmRemaining: 1_500, DateDue: null)]);
         Assert.Equal("- [vence_em_breve] Gol: Revisão · faltam 1500 km", b2);
     }
+
+    [Fact]
+    public void Body_acima_do_teto_trunca_em_linhas_inteiras_com_contagem()
+    {
+        // 120 itens × ~80 chars ≈ 9.7k chars ≫ teto: precisa truncar
+        var items = Enumerable.Range(0, 120).Select(i => new DueItem(
+            $"Asset {i:000}", $"Manutenção periódica número {i:000} do template",
+            DueStatus.Overdue, KmRemaining: null, DateDue: new DateOnly(2026, 9, 1))).ToList();
+
+        var (_, body) = ReminderText.Format(items);
+
+        Assert.True(body.Length <= ReminderText.MaxBodyChars,
+            $"body tem {body.Length} chars, teto é {ReminderText.MaxBodyChars}");
+
+        var lines = body.Split('\n');
+        Assert.StartsWith("- [vencido] Asset 000: Manutenção", lines[0]); // mais urgentes ficam
+        Assert.All(lines[..^1], l => Assert.StartsWith("- [", l)); // sem linha cortada no meio
+
+        var last = lines[^1];
+        Assert.StartsWith("… (+", last);
+        Assert.EndsWith(" itens)", last);
+        var omitted = int.Parse(last["… (+".Length..^" itens)".Length]);
+        Assert.True(omitted > 0);
+        // mantidas + omitidas = total: nada sumiu sem contagem
+        Assert.Equal(items.Count, (lines.Length - 1) + omitted);
+    }
+
+    [Fact]
+    public void Body_abaixo_do_teto_nao_trunca()
+    {
+        var items = new List<DueItem>
+        {
+            new("Gol", "Troca de óleo", DueStatus.Overdue, KmRemaining: null, DateDue: new DateOnly(2026, 9, 1))
+        };
+        var (_, body) = ReminderText.Format(items);
+        Assert.Equal("- [vencido] Gol: Troca de óleo · venceu 2026-09-01", body); // sem sufixo de trunc
+    }
 }

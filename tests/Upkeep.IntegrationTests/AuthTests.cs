@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Upkeep.Infrastructure;
@@ -17,6 +18,8 @@ public class AuthTests(ApiFixture fixture)
         var resp = await fixture.CreateClient().PostAsJsonAsync("/auth/register",
             new { email = "reg@test.local", password = "SenhaForte!123" }, ct);
         Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        // 201 SEM Location: /users/{id} não é rota existente — header apontaria p/ nada
+        Assert.Null(resp.Headers.Location);
         var body = await resp.Content.ReadFromJsonAsync<AuthResponse>(ct);
         Assert.NotEmpty(body!.AccessToken);
         Assert.NotEmpty(body.RefreshToken);
@@ -24,13 +27,32 @@ public class AuthTests(ApiFixture fixture)
     }
 
     [Fact]
-    public async Task Register_email_duplicado_409()
+    public async Task Register_email_duplicado_409_problemdetails()
     {
         var ct = TestContext.Current.CancellationToken;
         var req = new { email = "dup@test.local", password = "SenhaForte!123" };
         await fixture.CreateClient().PostAsJsonAsync("/auth/register", req, ct);
         var resp = await fixture.CreateClient().PostAsJsonAsync("/auth/register", req, ct);
         Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
+
+        // 409 é ProblemDetails (contrato de erro da API): title + type conflict
+        var problem = await resp.Content.ReadFromJsonAsync<ProblemBody>(ct);
+        Assert.Equal(409, problem!.Status);
+        Assert.Equal("E-mail já cadastrado", problem.Title);
+        Assert.Equal("https://upkeep.leandrossb.com/errors/conflict", problem.Type);
+    }
+
+    [Fact]
+    public async Task Register_corpo_null_literal_400()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        // JSON null literal binda como argumento null — guard do ValidationFilter
+        // responde 400 (pinado: sem ele o handler estouraria NRE no req.Email → 500)
+        var resp = await fixture.CreateClient().PostAsync("/auth/register",
+            new StringContent("null", Encoding.UTF8, "application/json"), ct);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        Assert.Contains("Corpo da requisição inválido",
+            await resp.Content.ReadAsStringAsync(ct));
     }
 
     [Fact]
@@ -122,6 +144,8 @@ public class AuthTests(ApiFixture fixture)
         var out1 = await client.PostAsJsonAsync("/auth/logout",
             new { refreshToken = auth!.RefreshToken }, ct);
         Assert.Equal(HttpStatusCode.OK, out1.StatusCode);
+        // corpo do 200 é exatamente {} (contrato: nada além do ok; idempotente)
+        Assert.Equal("{}", (await out1.Content.ReadAsStringAsync(ct)).Trim());
 
         // revogado: o MESMO refresh não roda mais no /auth/refresh
         var refresh = await client.PostAsJsonAsync("/auth/refresh",
@@ -229,3 +253,6 @@ public class AuthTests(ApiFixture fixture)
 }
 
 public sealed record RefreshResponse(string AccessToken, string RefreshToken);
+
+/// <summary>Shape de ProblemDetails (subset que os testes assertam: type/title/status).</summary>
+public sealed record ProblemBody(string? Type, string? Title, int? Status);

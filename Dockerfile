@@ -16,7 +16,7 @@ COPY . .
 RUN dotnet restore src/Upkeep.Api/Upkeep.Api.csproj \
  && dotnet publish src/Upkeep.Api/Upkeep.Api.csproj -c Release -o /app --no-restore
 
-# Chiseled: ~120MB a menos que o aspnet:10.0 completo; sem ICU/glibc apps extras —
+# Chiseled: ~160MB a menos que o aspnet:10.0 completo; sem ICU/glibc apps extras —
 # exige <InvariantGlobalization>true</InvariantGlobalization> no csproj da Api.
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled
 WORKDIR /app

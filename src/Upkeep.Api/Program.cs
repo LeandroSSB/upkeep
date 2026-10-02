@@ -41,14 +41,14 @@ builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>()
 
 // ntfy: lembretes diários de manutenções vencidas. O worker diário só sobe com
 // Ntfy:Enabled=true (padrão false — tests/dev não varrem nada nem saem pra rede).
+// Binding ÚNICA via IOptions<NtfyOptions> — DueReminderService e o worker leem a
+// mesma configuração (sem singleton duplicado divergindo da seção bindada).
 builder.Services.Configure<NtfyOptions>(builder.Configuration.GetSection("Ntfy"));
-var ntfy = builder.Configuration.GetSection("Ntfy").Get<NtfyOptions>() ?? new NtfyOptions();
-builder.Services.AddSingleton(ntfy); // instância bindada p/ DueReminderService
 // 30s: durante outage do ntfy.sh cada POST pararia até 100s (default) — varredura
 // sequencial por usuário ficaria N×100s; timeout curto + isolamento por usuário.
 builder.Services.AddHttpClient("ntfy", c => c.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddScoped<INotificationService, DueReminderService>();
-if (ntfy.Enabled)
+if (builder.Configuration.GetValue<bool>("Ntfy:Enabled"))
     builder.Services.AddHostedService<NtfyReminderWorker>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -147,10 +147,18 @@ if (!app.Environment.IsProduction())
     app.MapScalarApiReference(); // /scalar — docs interativas fora de produção
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-app.MapGet("/health/ready", async (UpkeepDbContext db) =>
-    await db.Database.CanConnectAsync()
+app.MapGet("/health/ready", async (UpkeepDbContext db, HttpContext context) =>
+{
+    // CanConnect devolve false em falha "limpa", mas LANÇA em outras (ex.: provider
+    // fora do ar) — sem o catch o middleware viraria 500; health check espera 503.
+    // CT do request: cliente desiste → não segura o slot do pool de conexões.
+    bool ok;
+    try { ok = await db.Database.CanConnectAsync(context.RequestAborted); }
+    catch { ok = false; }
+    return ok
         ? Results.Ok(new { status = "ready" })
-        : Results.Problem(statusCode: 503, title: "Database unavailable"));
+        : Results.Problem(statusCode: 503, title: "Database unavailable");
+});
 
 app.MapAuthEndpoints();
 app.MapMeEndpoints();

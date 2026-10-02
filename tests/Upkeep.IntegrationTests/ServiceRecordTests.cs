@@ -41,7 +41,7 @@ public class ServiceRecordTests(ApiFixture fixture)
             new { templateId, data = new DateOnly(2026, 9, 20), odometro = 51_000,
                   custo = 320.50m, notas = "Óleo 5W30 sintético" }, ct);
         Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
-        Assert.StartsWith($"/assets/{assetId}/services/", resp.Headers.Location?.ToString());
+        Assert.Null(resp.Headers.Location); // 201 sem Location: coleção só tem GET lista
 
         var body = await resp.Content.ReadFromJsonAsync<ServiceResponse>(Json, ct);
         Assert.NotNull(body);
@@ -251,8 +251,12 @@ public class ServiceRecordTests(ApiFixture fixture)
 
         var del = await client.DeleteAsync($"/templates/{templateId}", ct);
         Assert.Equal(HttpStatusCode.Conflict, del.StatusCode);
-        Assert.Contains("Template possui serviços vinculados",
-            await del.Content.ReadAsStringAsync(ct));
+
+        // 409 é ProblemDetails: title + type conflict (mesmo contrato do register)
+        var problem = await del.Content.ReadFromJsonAsync<ProblemBody>(Json, ct);
+        Assert.Equal(409, problem!.Status);
+        Assert.Equal("Template possui serviços vinculados", problem.Title);
+        Assert.Equal("https://upkeep.leandrossb.com/errors/conflict", problem.Type);
     }
 }
 

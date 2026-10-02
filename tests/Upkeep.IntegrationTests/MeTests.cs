@@ -26,16 +26,25 @@ public class MeTests(ApiFixture fixture)
     {
         var ct = TestContext.Current.CancellationToken;
         var (client, _) = await fixture.CreateAuthenticatedClientAsync("me-set@test.local");
+        try
+        {
+            var put = await client.PutAsJsonAsync("/me/ntfy-topic",
+                new { ntfyTopic = "upkeep-teste-1" }, ct);
+            Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+            var body = await put.Content.ReadFromJsonAsync<MeResponse>(ct);
+            Assert.Equal("upkeep-teste-1", body!.NtfyTopic);
 
-        var put = await client.PutAsJsonAsync("/me/ntfy-topic",
-            new { ntfyTopic = "upkeep-teste-1" }, ct);
-        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
-        var body = await put.Content.ReadFromJsonAsync<MeResponse>(ct);
-        Assert.Equal("upkeep-teste-1", body!.NtfyTopic);
-
-        // persistiu de verdade: GET reflete o valor salvo
-        var me = await client.GetFromJsonAsync<MeResponse>("/me", ct);
-        Assert.Equal("upkeep-teste-1", me!.NtfyTopic);
+            // persistiu de verdade: GET reflete o valor salvo
+            var me = await client.GetFromJsonAsync<MeResponse>("/me", ct);
+            Assert.Equal("upkeep-teste-1", me!.NtfyTopic);
+        }
+        finally
+        {
+            // a varredura do ntfy olha TODOS os usuários com tópico: tópico deixado
+            // aqui vazaria pendências fictícias nos ReminderTests (padrão ReminderTests)
+            await client.PutAsJsonAsync("/me/ntfy-topic",
+                new { ntfyTopic = (string?)null }, ct);
+        }
     }
 
     [Fact]

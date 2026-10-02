@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Upkeep;
 using Upkeep.Infrastructure;
 
@@ -32,7 +33,7 @@ public sealed class DueReminderService(
     UpkeepDbContext db,
     IHttpClientFactory httpFactory,
     ILogger<DueReminderService> logger,
-    NtfyOptions ntfy) : INotificationService
+    IOptions<NtfyOptions> ntfy) : INotificationService
 {
     public async Task<int> SendDueRemindersAsync(CancellationToken ct)
     {
@@ -87,7 +88,7 @@ public sealed class DueReminderService(
             var (title, body) = ReminderText.Format(items);
             try
             {
-                var resp = await http.PostAsJsonAsync(ntfy.Server, new
+                var resp = await http.PostAsJsonAsync(ntfy.Value.Server, new
                 {
                     topic = topics[userId],
                     title,
