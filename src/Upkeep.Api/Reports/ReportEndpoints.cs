@@ -32,14 +32,20 @@ public static class ReportEndpoints
             if (from.HasValue) query = query.Where(s => s.Data >= from.Value); // bounds inclusivos
             if (to.HasValue) query = query.Where(s => s.Data <= to.Value);
 
-            // GroupBy+Sum+Count traduzidos p/ SQL: agregação roda no banco,
-            // materializa apenas uma linha por asset
-            var porAsset = await query
+            // GroupBy+Sum+Count+OrderBy traduzidos p/ SQL: agregação roda no banco,
+            // materializa apenas uma linha por asset. Atenção: o OrderBy deve recair
+            // sobre a projeção anônima (member-init) — ordenar por membro de um record
+            // projetado via construtor posicional não re-bind ao agregado e o EF
+            // rejeita a tradução (IQueryable vira in-translate-able → 500).
+            var rows = await query
                 .GroupBy(s => new { s.AssetId, s.Asset!.Nome })
-                .Select(g => new CostByAssetResponse(
-                    g.Key.AssetId, g.Key.Nome, g.Sum(x => x.Custo), g.Count()))
+                .Select(g => new { g.Key.AssetId, g.Key.Nome, Total = g.Sum(x => x.Custo), Qtd = g.Count() })
                 .OrderByDescending(r => r.Total)
                 .ToListAsync();
+
+            var porAsset = rows
+                .Select(r => new CostByAssetResponse(r.AssetId, r.Nome, r.Total, r.Qtd))
+                .ToList();
 
             return Results.Ok(new CostReportResponse(porAsset.Sum(r => r.Total), porAsset, from, to));
         });
