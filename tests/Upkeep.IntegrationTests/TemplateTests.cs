@@ -215,6 +215,21 @@ public class TemplateTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task Sem_token_401_em_get_e_post()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var anon = fixture.CreateClient();
+        var assetId = Guid.NewGuid(); // nem precisa existir: 401 vem antes de qualquer lookup
+
+        var get = await anon.GetAsync($"/assets/{assetId}/templates", ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, get.StatusCode);
+
+        var post = await anon.PostAsJsonAsync($"/assets/{assetId}/templates",
+            new { titulo = "Anônimo", intervaloKm = 5_000 }, ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, post.StatusCode);
+    }
+
+    [Fact]
     public async Task Cross_user_404_em_get_post_put_delete_template()
     {
         var ct = TestContext.Current.CancellationToken;

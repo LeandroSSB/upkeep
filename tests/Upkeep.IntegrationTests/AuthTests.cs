@@ -54,6 +54,13 @@ public class AuthTests(ApiFixture fixture)
             new { email = "login@test.local", password = "SenhaForte!123" }, ct);
         Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
 
+        // shape do corpo 200: tokens + user (contrato que o SPA consome)
+        var body = await ok.Content.ReadFromJsonAsync<AuthResponse>(ct);
+        Assert.NotEmpty(body!.AccessToken);
+        Assert.NotEmpty(body.RefreshToken);
+        Assert.NotEqual(Guid.Empty, body.User.Id);
+        Assert.Equal("login@test.local", body.User.Email);
+
         // senha errada e usuário inexistente → mesma resposta 401 (não vaza qual falhou)
         var bad = await fixture.CreateClient().PostAsJsonAsync("/auth/login",
             new { email = "login@test.local", password = "errada!1234" }, ct);
@@ -102,6 +109,65 @@ public class AuthTests(ApiFixture fixture)
             new { refreshToken = novo.RefreshToken }, ct);
         Assert.Equal(HttpStatusCode.Unauthorized, cascade.StatusCode);
     }
+    [Fact]
+    public async Task Logout_revoga_refresh_e_e_idempotente()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var client = fixture.CreateClient();
+        var reg = await client.PostAsJsonAsync("/auth/register",
+            new { email = "logout@test.local", password = "SenhaForte!123" }, ct);
+        reg.EnsureSuccessStatusCode();
+        var auth = await reg.Content.ReadFromJsonAsync<AuthResponse>(ct);
+
+        var out1 = await client.PostAsJsonAsync("/auth/logout",
+            new { refreshToken = auth!.RefreshToken }, ct);
+        Assert.Equal(HttpStatusCode.OK, out1.StatusCode);
+
+        // revogado: o MESMO refresh não roda mais no /auth/refresh
+        var refresh = await client.PostAsJsonAsync("/auth/refresh",
+            new { refreshToken = auth.RefreshToken }, ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
+
+        // idempotente: repetir o logout (token já revogado) segue 200, sem erro
+        var out2 = await client.PostAsJsonAsync("/auth/logout",
+            new { refreshToken = auth.RefreshToken }, ct);
+        Assert.Equal(HttpStatusCode.OK, out2.StatusCode);
+    }
+
+    [Fact]
+    public async Task Logout_token_desconhecido_200_nao_vaza_existencia()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        // token que nunca existiu → mesmo 200 (idempotente, não vaza nada)
+        var resp = await fixture.CreateClient().PostAsJsonAsync("/auth/logout",
+            new { refreshToken = "token-que-nunca-existiu" }, ct);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_expirado_401()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var client = fixture.CreateClient();
+        var reg = await client.PostAsJsonAsync("/auth/register",
+            new { email = "expirado@test.local", password = "SenhaForte!123" }, ct);
+        reg.EnsureSuccessStatusCode();
+        var auth = await reg.Content.ReadFromJsonAsync<AuthResponse>(ct);
+
+        // força a expiração direto no banco (fixture scope)
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<UpkeepDbContext>();
+            var token = await db.RefreshTokens.SingleAsync(t => t.UserId == auth!.User.Id, ct);
+            token.ExpiresAt = DateTime.UtcNow.AddDays(-1);
+            await db.SaveChangesAsync(ct);
+        }
+
+        var resp = await client.PostAsJsonAsync("/auth/refresh",
+            new { refreshToken = auth!.RefreshToken }, ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
     [Fact]
     public async Task Login_purga_refresh_tokens_expirados_e_antigos()
     {

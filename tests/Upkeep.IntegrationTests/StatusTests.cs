@@ -170,6 +170,29 @@ public class StatusTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task Agregado_misto_vencido_por_km_e_vence_em_breve_por_data()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+        var assetId = await CreateAssetAsync(client, ct, odometroAtual: 61_000);
+
+        // A: vencido por KM (50.000 + 10.000 − 61.000 = −1.000), sem critério tempo
+        await CreateTemplateAsync(client, assetId, ct,
+            intervaloKm: 10_000, intervaloMeses: null, baselineOdometro: 50_000, baselineData: hoje);
+        // B: vence em breve por DATA (due em ~20 dias ≤ 30), sem critério km
+        await CreateTemplateAsync(client, assetId, ct,
+            intervaloKm: null, intervaloMeses: 12, baselineOdometro: null,
+            baselineData: hoje.AddDays(20).AddMonths(-12));
+
+        var a = await GetAssetAsync(client, assetId, ct);
+        Assert.Equal("vencido", a.StatusAgregado); // pior status manda no agregado
+        Assert.Equal(1, a.Overdue);
+        Assert.Equal(1, a.DueSoon);
+        Assert.Equal(0, a.Ok);
+    }
+
+    [Fact]
     public async Task Asset_sem_templates_agregado_ok_com_contagens_zero()
     {
         var ct = TestContext.Current.CancellationToken;

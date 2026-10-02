@@ -160,6 +160,23 @@ public class ReportTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task From_maior_que_to_retorna_200_total_zero_e_vazio()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var asset = await CreateAssetAsync(client, ct);
+
+        await PostServiceAsync(client, asset, new DateOnly(2026, 3, 10), 100m, ct);
+        await PostServiceAsync(client, asset, new DateOnly(2026, 6, 10), 200m, ct);
+
+        // from > to: janela impossível é filtro que casa nada — 200, não erro
+        var rel = await GetReportAsync(client, ct, "from=2027-01-01&to=2026-01-01");
+
+        Assert.Equal(0m, rel.Total);
+        Assert.Empty(rel.PorAsset);
+    }
+
+    [Fact]
     public async Task Sem_token_401()
     {
         var ct = TestContext.Current.CancellationToken;
