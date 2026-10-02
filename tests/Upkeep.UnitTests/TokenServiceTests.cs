@@ -49,7 +49,9 @@ public class TokenServiceTests
 
         Assert.Equal(User.Id.ToString(), principal.FindFirst("sub")!.Value);
         Assert.Equal("a@b.c", principal.FindFirst("email")!.Value);
-        Assert.True(expires - agora <= TimeSpan.FromMinutes(15));
+        // o serviço lê UtcNow próprio (logo após 'agora') → validade = 15min + ε
+        Assert.True(expires - agora >= TimeSpan.FromMinutes(15));
+        Assert.True(expires - agora <= TimeSpan.FromMinutes(16));
     }
 
     [Fact]
