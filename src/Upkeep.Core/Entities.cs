@@ -24,6 +24,8 @@ public sealed class RefreshToken
     public DateTime ExpiresAt { get; set; }
     public DateTime? RevokedAt { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public User? User { get; set; }
 }
 
 /// <summary>Ativo monitorado (veículo, casa, aparelho...).</summary>
@@ -50,6 +52,8 @@ public sealed class MaintenanceTemplate
     public decimal? CustoEstimado { get; set; }
     public int? BaselineOdometro { get; set; }
     public DateOnly BaselineData { get; set; }
+
+    public Asset? Asset { get; set; }
 }
 
 /// <summary>Serviço/execução registrada num ativo.</summary>
@@ -63,4 +67,7 @@ public sealed class ServiceRecord
     public decimal Custo { get; set; }
     public string? Notas { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public Asset? Asset { get; set; }
+    public MaintenanceTemplate? Template { get; set; }
 }
