@@ -2,9 +2,10 @@
 // VENCE EM BREVE e a lista ATIVOS com os dots de contagem.
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { listAssets, type Asset } from "../api/assets";
+import { listAssets, listTemplates, type Asset } from "../api/assets";
 import { ApiError } from "../api/client";
 import { Sticker } from "../components/Sticker";
+import { templateDestaque, todayIso, worstTemplate } from "../lib/destaque";
 import { formatKm, statusLabel, typeLabel } from "../lib/format";
 import type { Status } from "../lib/types";
 
@@ -77,6 +78,29 @@ export default function Home() {
   const breves = assets.filter((a) => a.statusAgregado === "vence_em_breve" && a.id !== heroId);
   const worst = worstStatus(assets);
 
+  // Destaque do herói sai do pior template do asset ("estourou 1.500 km" conta a
+  // história melhor que "1 vencida"). Falha/nada urgente nos templates → fallback
+  // para o texto de contagem.
+  const [heroDetail, setHeroDetail] = useState<{ status: Status; destaque: string } | null>(null);
+  useEffect(() => {
+    setHeroDetail(null);
+    if (!heroId) return;
+    let cancelled = false;
+    listTemplates(heroId)
+      .then((templates) => {
+        if (cancelled) return;
+        const worstTemplateItem = worstTemplate(templates);
+        if (!worstTemplateItem) return;
+        const destaque = templateDestaque(worstTemplateItem, todayIso());
+        if (destaque) setHeroDetail({ status: worstTemplateItem.status ?? "vencido", destaque });
+      })
+      .catch(() => {} // sem templates do herói: segue o texto de contagem
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [heroId]);
+
   return (
     <div className="shell">
       <header className="app-header">
@@ -115,18 +139,19 @@ export default function Home() {
           <>
             {hero && (
               <>
-                <p className="eyebrow">Mais urgente</p>
+                <p className="eyebrow eyebrow--hero">Mais urgente</p>
                 <Link to={`/ativos/${hero.asset.id}`} className="asset-link">
                   <Sticker
                     hero
                     item={{
                       titulo: hero.asset.nome,
                       subtitulo: typeLabel(hero.asset.tipo),
-                      status: hero.status,
+                      status: heroDetail?.status ?? hero.status,
                       destaque:
-                        hero.asset.overdue > 0
+                        heroDetail?.destaque ??
+                        (hero.asset.overdue > 0
                           ? plural(hero.asset.overdue, "vencida", "vencidas")
-                          : plural(hero.asset.dueSoon, "vence em breve", "vencem em breve"),
+                          : plural(hero.asset.dueSoon, "vence em breve", "vencem em breve")),
                     }}
                   />
                 </Link>

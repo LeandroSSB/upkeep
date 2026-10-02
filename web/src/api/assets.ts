@@ -39,3 +39,20 @@ export interface AssetTemplate {
 export async function listTemplates(assetId: string): Promise<AssetTemplate[]> {
   return apiFetch<AssetTemplate[]>(`/assets/${assetId}/templates`);
 }
+
+/**
+ * POST /assets/{id}/odometer. Regra não-regressiva é do servidor: valor menor que
+ * o atual → 400 com errors.odometer (o form mostra inline). Resposta é AssetResponse
+ * sem os agregados (statusAgregado etc. null) — use só os campos básicos.
+ */
+export async function updateOdometer(assetId: string, odometer: number): Promise<Asset> {
+  return apiFetch<Asset>(`/assets/${assetId}/odometer`, {
+    method: "POST",
+    body: JSON.stringify({ odometer }),
+  });
+}
+
+/** DELETE /assets/{id} → 204. Apaga o asset com templates e histórico (cascade). */
+export async function deleteAsset(assetId: string): Promise<void> {
+  return apiFetch<void>(`/assets/${assetId}`, { method: "DELETE" });
+}

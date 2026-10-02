@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AssetDetail from "./pages/AssetDetail";
 import AssetForm from "./pages/AssetForm";
+import EmConstrucao from "./pages/EmConstrucao";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import { useSession } from "./state/session";
@@ -52,6 +53,39 @@ export default function App() {
         element={
           <RequireAuth>
             <AssetDetail />
+          </RequireAuth>
+        }
+      />
+      {/* rotas da Task 5 — placeholder até os formulários existirem */}
+      <Route
+        path="/ativos/:id/templates/novo"
+        element={
+          <RequireAuth>
+            <EmConstrucao titulo="Nova manutenção" />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/ativos/:id/templates/:templateId"
+        element={
+          <RequireAuth>
+            <EmConstrucao titulo="Manutenção" />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/ativos/:id/servicos/novo"
+        element={
+          <RequireAuth>
+            <EmConstrucao titulo="Lançar serviço" />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/ativos/:id/editar"
+        element={
+          <RequireAuth>
+            <EmConstrucao titulo="Editar ativo" />
           </RequireAuth>
         }
       />
