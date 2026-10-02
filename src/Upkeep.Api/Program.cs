@@ -6,6 +6,7 @@ using Serilog;
 using Upkeep.Api.Assets;
 using Upkeep.Api.Auth;
 using Upkeep.Api.Middleware;
+using Upkeep.Api.Services;
 using Upkeep.Api.Templates;
 using Upkeep.Infrastructure;
 
@@ -60,6 +61,7 @@ app.MapGet("/health/ready", async (UpkeepDbContext db) =>
 app.MapAuthEndpoints();
 app.MapAssetEndpoints();
 app.MapTemplateEndpoints();
+app.MapServiceEndpoints();
 
 app.Run();
 

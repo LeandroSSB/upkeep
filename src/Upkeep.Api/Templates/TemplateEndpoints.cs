@@ -111,7 +111,14 @@ public static class TemplateEndpoints
             if (template is null) return Results.NotFound();
 
             db.Templates.Remove(template);
-            await db.SaveChangesAsync();
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException) // FK Restrict no banco: há service_records vinculados
+            {
+                return Results.Conflict(new { title = "Template possui serviços vinculados" });
+            }
             return Results.NoContent();
         });
 
