@@ -144,9 +144,10 @@ public class DueCalculatorTests
     [Fact]
     public void Tempo_exatamente_30_dias_e_vence_em_breve()
     {
-        // baseline 2025-11-01 + 12m → vence 2026-11-01 = Hoje+30 exatos → 30 <= 30
-        var t = Template(meses: 12, baselineData: new DateOnly(2025, 11, 1));
-        var r = DueCalculator.Evaluate(t, new DueBaseline(null, new DateOnly(2025, 11, 1)), null, Hoje);
+        // baseline 2026-07-01 + 4m → vence 2026-11-01 = Hoje+30 exatos → 30 <= 30
+        // intervalo de 4m para isolar o braço fixo: 20% de 4 meses = 24,35d < 30 ⇒ só o braço fixo de 30 dias dispara
+        var t = Template(meses: 4, baselineData: new DateOnly(2026, 7, 1));
+        var r = DueCalculator.Evaluate(t, new DueBaseline(null, new DateOnly(2026, 7, 1)), null, Hoje);
         Assert.Equal(DueStatus.DueSoon, r.Status);
         Assert.Equal(new DateOnly(2026, 11, 1), r.DateDue);
     }
