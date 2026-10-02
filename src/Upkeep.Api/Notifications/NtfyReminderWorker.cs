@@ -38,7 +38,7 @@ public sealed class NtfyReminderWorker(
                 var n = await svc.SendDueRemindersAsync(stoppingToken);
                 logger.LogInformation("ntfy: {N} lembrete(s) enviados", n);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "ntfy: falha na varredura diária");
             }

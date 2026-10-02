@@ -98,7 +98,7 @@ public sealed class DueReminderService(
                 resp.EnsureSuccessStatusCode();
                 sent++;
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {
                 // Falha num usuário não pode derrubar a varredura dos demais.
                 logger.LogWarning(ex, "Falha ao notificar usuário {UserId} no ntfy", userId);
