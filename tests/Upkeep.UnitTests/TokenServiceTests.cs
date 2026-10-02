@@ -32,6 +32,8 @@ public class TokenServiceTests
         var (token, expires) = _svc.CreateAccessToken(User);
 
         var handler = new JwtSecurityTokenHandler();
+        // sem isto o handler mapeia "sub"/"email" para os claim types longos do .NET
+        handler.MapInboundClaims = false;
         var principal = handler.ValidateToken(token, new TokenValidationParameters
         {
             ValidateIssuer = true,
