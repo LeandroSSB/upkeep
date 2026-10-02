@@ -21,6 +21,7 @@ public class UpkeepDbContext(DbContextOptions<UpkeepDbContext> options) : DbCont
             e.Property(x => x.Email).HasMaxLength(256).IsRequired();
             e.HasIndex(x => x.Email).IsUnique();
             e.Property(x => x.PasswordHash).HasMaxLength(512).IsRequired();
+            e.Property(x => x.NtfyTopic).HasMaxLength(64);
         });
 
         b.Entity<RefreshToken>(e =>

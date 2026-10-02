@@ -14,6 +14,9 @@ public sealed class User
     public string Email { get; set; } = "";
     public string PasswordHash { get; set; } = "";
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>Tópico ntfy para push (null = sem notificação).</summary>
+    public string? NtfyTopic { get; set; }
 }
 
 public sealed class RefreshToken
