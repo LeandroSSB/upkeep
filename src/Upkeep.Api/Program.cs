@@ -1,4 +1,5 @@
 using System.Text;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -27,7 +28,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         // MapInboundClaims=false: claims chegam com nomes literais ("sub") — sem isso o handler
         // remapeia para URIs ( ClaimTypes.*) e GetUserId não encontra o claim (achado Task 5).
         o.MapInboundClaims = false;
-        o.NameClaimType = "sub";
         o.TokenValidationParameters = new()
         {
             ValidIssuer = jwt.Issuer,
