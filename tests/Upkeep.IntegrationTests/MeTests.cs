@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Xunit;
 
 namespace Upkeep.IntegrationTests;
@@ -89,6 +90,68 @@ public class MeTests(ApiFixture fixture)
         var resp = await fixture.CreateClient().GetAsync("/me", ct);
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
+
+    // ---- POST /me/ntfy-topic/test (teste instantâneo de push) ----
+
+    [Fact]
+    public async Task Test_notification_com_topico_200_e_envia_um_push()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        fixture.CapturedNtfy.Clear();
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync("me-push-ok@test.local");
+        try
+        {
+            var set = await client.PutAsJsonAsync("/me/ntfy-topic",
+                new { ntfyTopic = "me-push-ok" }, ct);
+            set.EnsureSuccessStatusCode();
+
+            var resp = await client.PostAsync("/me/ntfy-topic/test", content: null, ct);
+
+            Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+            var body = await resp.Content.ReadFromJsonAsync<TesteNotificacaoResponse>(ct);
+            Assert.True(body!.Enviado);
+
+            // exatamente 1 push, para o tópico SALVO do usuário, com o texto de teste
+            var push = Assert.Single(fixture.CapturedNtfy);
+            Assert.Equal("me-push-ok", push.Topic);
+            using var doc = JsonDocument.Parse(push.Json);
+            var root = doc.RootElement;
+            Assert.Equal("upkeep: teste ✓", root.GetProperty("title").GetString());
+            Assert.Equal("Se você recebeu, os lembretes vão funcionar.",
+                root.GetProperty("message").GetString());
+            Assert.Equal("white_check_mark", root.GetProperty("tags")[0].GetString());
+            Assert.Equal(3, root.GetProperty("priority").GetInt32());
+        }
+        finally
+        {
+            // mesmo padrão dos outros testes: tópico deixado vazaria pushes fictícios
+            await client.PutAsJsonAsync("/me/ntfy-topic",
+                new { ntfyTopic = (string?)null }, ct);
+        }
+    }
+
+    [Fact]
+    public async Task Test_notification_sem_topico_400()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        fixture.CapturedNtfy.Clear();
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync("me-push-sem@test.local");
+
+        var resp = await client.PostAsync("/me/ntfy-topic/test", content: null, ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        Assert.Contains("Configure um tópico", await resp.Content.ReadAsStringAsync(ct));
+        Assert.Empty(fixture.CapturedNtfy);
+    }
+
+    [Fact]
+    public async Task Test_notification_sem_token_401()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var resp = await fixture.CreateClient().PostAsync("/me/ntfy-topic/test", content: null, ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
 }
 
 public sealed record MeResponse(Guid Id, string Email, string? NtfyTopic);
+public sealed record TesteNotificacaoResponse(bool Enviado);

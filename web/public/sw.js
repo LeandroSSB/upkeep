@@ -38,9 +38,10 @@ self.addEventListener("fetch", (event) => {
       (async () => {
         try {
           const fresh = await fetch(event.request);
-          // Mantém o shell em cache atualizado para o próximo modo offline.
+          // Mantém o shell em cache atualizado para o próximo modo offline —
+          // só resposta ok: um 503/504 do nginx não pode virar o shell offline.
           const cache = await caches.open(VERSION);
-          cache.put("/index.html", fresh.clone());
+          if (fresh.ok) await cache.put("/index.html", fresh.clone());
           return fresh;
         } catch {
           const cache = await caches.open(VERSION);

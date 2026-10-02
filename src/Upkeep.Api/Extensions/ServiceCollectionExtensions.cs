@@ -43,12 +43,13 @@ public static class ServiceCollectionExtensions
 
         // ntfy: lembretes diários de manutenções vencidas. O worker diário só sobe com
         // Ntfy:Enabled=true (padrão false — tests/dev não varrem nada nem saem pra rede).
-        // Binding ÚNICA via IOptions<NtfyOptions> — DueReminderService e o worker leem a
-        // mesma configuração (sem singleton duplicado divergindo da seção bindada).
+        // Binding ÚNICA via IOptions<NtfyOptions> — NtfyPublisher (varredura e teste
+        // instantâneo) e o worker leem a mesma configuração.
         builder.Services.Configure<NtfyOptions>(builder.Configuration.GetSection("Ntfy"));
         // 30s: durante outage do ntfy.sh cada POST pararia até 100s (default) — varredura
         // sequencial por usuário ficaria N×100s; timeout curto + isolamento por usuário.
         builder.Services.AddHttpClient("ntfy", c => c.Timeout = TimeSpan.FromSeconds(30));
+        builder.Services.AddScoped<INtfyPublisher, NtfyPublisher>();
         builder.Services.AddScoped<INotificationService, DueReminderService>();
         if (builder.Configuration.GetValue<bool>("Ntfy:Enabled"))
             builder.Services.AddHostedService<NtfyReminderWorker>();

@@ -2,7 +2,7 @@
 // Toast reutilizado de components/Toast (mesmo do AssetDetail).
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMe, updateNtfyTopic, type Me } from "../api/auth";
+import { getMe, testNotification, updateNtfyTopic, type Me } from "../api/auth";
 import { ApiError } from "../api/client";
 import { AppShell } from "../components/AppShell";
 import { Field } from "../components/Field";
@@ -74,6 +74,8 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
   const [topicError, setTopicError] = useState<string | undefined>();
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testError, setTestError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   function validate(value: string): string | undefined {
@@ -107,6 +109,24 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
     }
   }
 
+  // O teste dispara para o tópico SALVO no servidor — só faz sentido com o campo
+  // preenchido (e válido), senão o usuário clicaria sem ter nada configurado.
+  const topicTrimmed = topic.trim();
+  const topicPreenchidoValido = topicTrimmed !== "" && TOPIC_PATTERN.test(topicTrimmed);
+
+  async function onTestNotification() {
+    setTesting(true);
+    setTestError(null);
+    try {
+      await testNotification();
+      setToast("Notificação enviada — confira o celular");
+    } catch (err) {
+      setTestError(err instanceof ApiError ? err.title : "Algo deu errado. Tente de novo.");
+    } finally {
+      setTesting(false);
+    }
+  }
+
   function onLogout() {
     logout();
     navigate("/entrar", { replace: true });
@@ -130,6 +150,7 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
             onChange={(e) => {
               setTopic(e.target.value);
               setTopicError(undefined); // erro do servidor/validação não sobrevive à edição
+              setTestError(null);
             }}
             aria-invalid={topicError !== undefined}
           />
@@ -156,7 +177,21 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
           <button type="submit" className="btn btn--primary" disabled={saving}>
             {saving ? "Salvando…" : "Salvar"}
           </button>
+          <button
+            type="button"
+            className="btn"
+            onClick={onTestNotification}
+            disabled={!topicPreenchidoValido || testing}
+          >
+            {testing ? "Enviando…" : "Testar notificação"}
+          </button>
         </div>
+
+        {testError && (
+          <p className="form-error" role="alert">
+            {testError}
+          </p>
+        )}
       </form>
 
       <div className="settings-footer">

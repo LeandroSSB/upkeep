@@ -51,3 +51,11 @@ export async function updateNtfyTopic(ntfyTopic: string): Promise<Me> {
     body: JSON.stringify({ ntfyTopic }),
   });
 }
+
+/**
+ * POST /me/ntfy-topic/test — dispara 1 push de teste para o tópico SALVO no
+ * servidor (edits não salvos não são testados). Sem tópico salvo → 400.
+ */
+export async function testNotification(): Promise<void> {
+  await apiFetch("/me/ntfy-topic/test", { method: "POST" });
+}

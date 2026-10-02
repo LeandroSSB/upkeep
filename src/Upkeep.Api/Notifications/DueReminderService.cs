@@ -1,6 +1,4 @@
-using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Upkeep;
 using Upkeep.Infrastructure;
 
@@ -27,13 +25,11 @@ public sealed class NtfyOptions
 /// <summary>
 /// Varredura multi-usuário: usuários com NtfyTopic → seus assets → templates → último
 /// serviço por template (mesma resolução de baseline do StatusService: Data desc, Id desc)
-/// → DueCalculator → 1 POST ntfy por usuário com qualquer Overdue/DueSoon.
+/// → DueCalculator → 1 push ntfy por usuário com qualquer Overdue/DueSoon.
 /// </summary>
 public sealed class DueReminderService(
     UpkeepDbContext db,
-    IHttpClientFactory httpFactory,
-    ILogger<DueReminderService> logger,
-    IOptions<NtfyOptions> ntfy) : INotificationService
+    INtfyPublisher ntfy) : INotificationService
 {
     public async Task<int> SendDueRemindersAsync(CancellationToken ct)
     {
@@ -81,29 +77,15 @@ public sealed class DueReminderService(
             items.Add(new DueItem(asset.Nome, template.Titulo, r.Status, r.KmRemaining, r.DateDue));
         }
 
-        var http = httpFactory.CreateClient("ntfy");
         var sent = 0;
         foreach (var (userId, items) in dueByUser)
         {
             var (title, body) = ReminderText.Format(items);
-            try
-            {
-                var resp = await http.PostAsJsonAsync(ntfy.Value.Server, new
-                {
-                    topic = topics[userId],
-                    title,
-                    message = body,
-                    tags = new[] { "wrench" },
-                    priority = items.Any(i => i.Status == DueStatus.Overdue) ? 4 : 3
-                }, ct);
-                resp.EnsureSuccessStatusCode();
+            // Falha num usuário não derruba a varredura dos demais — o publisher
+            // loga o erro (com o tópico) e devolve false.
+            if (await ntfy.PublishAsync(topics[userId], title, body, ["wrench"],
+                    items.Any(i => i.Status == DueStatus.Overdue) ? 4 : 3, ct))
                 sent++;
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
-            {
-                // Falha num usuário não pode derrubar a varredura dos demais.
-                logger.LogWarning(ex, "Falha ao notificar usuário {UserId} no ntfy", userId);
-            }
         }
         return sent;
     }

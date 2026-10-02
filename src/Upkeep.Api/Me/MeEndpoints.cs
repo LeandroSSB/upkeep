@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Upkeep.Api.Auth;
 using Upkeep.Api.Common;
+using Upkeep.Api.Notifications;
 using Upkeep.Infrastructure;
 
 namespace Upkeep.Api.Me;
@@ -52,6 +53,25 @@ public static class MeEndpoints
         })
             .WithSummary("Define o tópico ntfy do usuário; null/vazio/whitespace limpa")
             .AddEndpointFilter<ValidationFilter<NtfyTopicRequest>>();
+
+        group.MapPost("/ntfy-topic/test",
+            async (UpkeepDbContext db, ClaimsPrincipal user, INtfyPublisher ntfy, CancellationToken ct) =>
+        {
+            var userId = user.GetUserId();
+            var u = await db.Users.SingleAsync(x => x.Id == userId, ct);
+            // Testa o tópico SALVO — o usuário precisa salvar antes de testar.
+            if (string.IsNullOrWhiteSpace(u.NtfyTopic))
+                return Results.Problem(title: "Configure um tópico antes de testar", statusCode: 400);
+
+            var enviado = await ntfy.PublishAsync(u.NtfyTopic,
+                "upkeep: teste ✓",
+                "Se você recebeu, os lembretes vão funcionar.",
+                ["white_check_mark"], 3, ct);
+            return enviado
+                ? Results.Ok(new { enviado = true })
+                : Results.Problem(title: "Não foi possível falar com o ntfy.sh — tente de novo", statusCode: 502);
+        })
+            .WithSummary("Envia 1 push ntfy de teste para o tópico salvo do usuário");
 
         return group;
     }
