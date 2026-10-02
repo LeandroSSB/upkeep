@@ -45,7 +45,8 @@ public class TemplateTests(ApiFixture fixture)
         Assert.Contains("\"dateDue\"", raw);
 
         var body = await resp.Content.ReadFromJsonAsync<TemplateResponse>(Json, ct);
-        Assert.NotEqual(Guid.Empty, body!.Id);
+        Assert.NotNull(body);
+        Assert.NotEqual(Guid.Empty, body.Id);
         Assert.Equal(assetId, body.AssetId);
         Assert.Equal("Troca de óleo", body.Titulo);
         Assert.Equal("Motor", body.Categoria);
@@ -98,7 +99,8 @@ public class TemplateTests(ApiFixture fixture)
 
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var body = await resp.Content.ReadFromJsonAsync<TemplateResponse>(Json, ct);
-        Assert.Equal("Revisão anual", body!.Titulo);
+        Assert.NotNull(body);
+        Assert.Equal("Revisão anual", body.Titulo);
         Assert.Null(body.Categoria);
         Assert.Null(body.IntervaloKm); // substituição total, não merge
         Assert.Equal(12, body.IntervaloMeses);
