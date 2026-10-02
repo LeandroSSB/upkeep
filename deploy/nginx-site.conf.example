@@ -1,0 +1,76 @@
+# upkeep — site nginx (modelo do que roda no megalan atrás de Cloudflare proxied).
+# Zona CF em modo Full + Origin Cert wildcard *.leandrossb.com + ssl_stapling off
+# (stapling ON trava handshake com CF → 525 silencioso — lição marmoaria).
+# API pública vive em /api/* (proxy_pass com "/" final = strip do prefixo);
+# o resto é o SPA servido pela própria imagem da API (wwwroot + fallback).
+# X-Original-URI alimenta o 404 JSON de /api/* desconhecido no app (ver Program.cs).
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name upkeep.leandrossb.com;
+    location /.well-known/acme-challenge/ { root /var/www/html; }
+    location /api/ {
+        proxy_pass http://127.0.0.1:14010/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Original-URI $request_uri;
+        proxy_read_timeout 90;
+    }
+    location / {
+        proxy_pass http://127.0.0.1:14010;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Original-URI "";
+        proxy_read_timeout 90;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name upkeep.leandrossb.com;
+
+    ssl_certificate     /etc/nginx/ssl/marmoaria.leandrossb.com.crt;  # wildcard *.leandrossb.com
+    ssl_certificate_key /etc/nginx/ssl/marmoaria.leandrossb.com.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305";
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+    ssl_stapling off;
+    ssl_stapling_verify off;
+
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:14010/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Original-URI $request_uri;
+        proxy_read_timeout 90;
+    }
+    location / {
+        proxy_pass http://127.0.0.1:14010;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Original-URI "";
+        proxy_read_timeout 90;
+    }
+    access_log /var/log/nginx/upkeep.leandrossb.com.ssl.access.log;
+    error_log  /var/log/nginx/upkeep.leandrossb.com.ssl.error.log;
+}
