@@ -11,7 +11,10 @@ public sealed class ValidationFilter<T>(IServiceProvider sp) : IEndpointFilter
         var validator = sp.GetService<IValidator<T>>();
         if (validator is not null)
         {
-            var dto = ctx.Arguments.OfType<T>().First();
+            var dto = ctx.Arguments.OfType<T>().FirstOrDefault();
+            if (dto is null) // corpo JSON literal null chega vinculado como argumento null
+                return Results.ValidationProblem(
+                    new Dictionary<string, string[]> { [""] = ["Corpo da requisição inválido"] });
             var result = await validator.ValidateAsync(dto);
             if (!result.IsValid)
             {

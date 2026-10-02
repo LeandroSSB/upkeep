@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using Upkeep.Api.Assets;
 using Upkeep.Api.Auth;
 using Upkeep.Api.Middleware;
 using Upkeep.Infrastructure;
@@ -56,6 +57,7 @@ app.MapGet("/health/ready", async (UpkeepDbContext db) =>
         : Results.Problem(statusCode: 503, title: "Database unavailable"));
 
 app.MapAuthEndpoints();
+app.MapAssetEndpoints();
 
 app.Run();
 
