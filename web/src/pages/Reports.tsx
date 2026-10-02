@@ -79,10 +79,16 @@ export default function Reports() {
 
   const report = phase.kind === "ready" ? phase.report : null;
   const months = report?.porMes ?? [];
-  // visão mês: régua toda zerada (ou clampada vazia) = mesmo empty state
+  // visão mês: régua toda zerada (ou clampada vazia) = mesmo empty state;
+  // !refreshing evita flash de "Nenhum custo" durante a troca de visão
   const temCusto =
     report !== null &&
+    !refreshing &&
     (view === "asset" ? report.porAsset.length > 0 : months.some((m) => m.total > 0));
+  // visão mês: o total exibido vem da régua (12 meses), não do período todo —
+  // evita contradição "Total R$1.000" com barras somando R$100 (dados antigos fora da janela)
+  const totalExibido =
+    view === "month" ? months.reduce((acc, m) => acc + m.total, 0) : (report?.total ?? 0);
 
   return (
     <AppShell>
@@ -154,8 +160,8 @@ export default function Reports() {
 
         {report && temCusto && (
           <>
-            <p className="eyebrow">Total no período</p>
-            <p className="display-xl report-total">{formatBRL(report.total)}</p>
+            <p className="eyebrow">{view === "month" ? "Total nos últimos 12 meses" : "Total no período"}</p>
+            <p className="display-xl report-total">{formatBRL(totalExibido)}</p>
 
             {view === "asset" ? (
               <>
