@@ -11,6 +11,7 @@ import ServiceForm from "./pages/ServiceForm";
 import Settings from "./pages/Settings";
 import TemplateForm from "./pages/TemplateForm";
 import { useSession } from "./state/session";
+import { UpdateBar } from "./components/UpdateBar";
 
 // Telas "de bolso" (Home/Relatórios/Ajustes) compartilham a tabbar fixa — quem
 // entra no pathless layout abaixo tem a barra; /entrar, detalhe e formulários não.
@@ -55,93 +56,97 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/entrar" element={<Login />} />
-      <Route element={<TabbedLayout />}>
+    <>
+      <Routes>
+        <Route path="/entrar" element={<Login />} />
+        <Route element={<TabbedLayout />}>
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <Home />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/relatorios"
+            element={
+              <RequireAuth>
+                <Reports />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/ajustes"
+            element={
+              <RequireAuth>
+                <Settings />
+              </RequireAuth>
+            }
+          />
+        </Route>
+        {/* novo é estático e vence :id no ranking do router — ordem aqui não decide */}
         <Route
-          path="/"
+          path="/ativos/novo"
           element={
             <RequireAuth>
-              <Home />
+              <AssetForm />
             </RequireAuth>
           }
         />
         <Route
-          path="/relatorios"
+          path="/ativos/:id"
           element={
             <RequireAuth>
-              <Reports />
+              <AssetDetail />
+            </RequireAuth>
+          }
+        />
+        {/* AssetForm decide criar/editar pela presença do :id na rota */}
+        <Route
+          path="/ativos/:id/editar"
+          element={
+            <RequireAuth>
+              <AssetForm />
+            </RequireAuth>
+          }
+        />
+        {/* TemplateForm decide nova/editar pela presença do :templateId */}
+        <Route
+          path="/ativos/:id/templates/novo"
+          element={
+            <RequireAuth>
+              <TemplateForm />
             </RequireAuth>
           }
         />
         <Route
-          path="/ajustes"
+          path="/ativos/:id/templates/:templateId"
           element={
             <RequireAuth>
-              <Settings />
+              <TemplateForm />
             </RequireAuth>
           }
         />
-      </Route>
-      {/* novo é estático e vence :id no ranking do router — ordem aqui não decide */}
-      <Route
-        path="/ativos/novo"
-        element={
-          <RequireAuth>
-            <AssetForm />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/ativos/:id"
-        element={
-          <RequireAuth>
-            <AssetDetail />
-          </RequireAuth>
-        }
-      />
-      {/* AssetForm decide criar/editar pela presença do :id na rota */}
-      <Route
-        path="/ativos/:id/editar"
-        element={
-          <RequireAuth>
-            <AssetForm />
-          </RequireAuth>
-        }
-      />
-      {/* TemplateForm decide nova/editar pela presença do :templateId */}
-      <Route
-        path="/ativos/:id/templates/novo"
-        element={
-          <RequireAuth>
-            <TemplateForm />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/ativos/:id/templates/:templateId"
-        element={
-          <RequireAuth>
-            <TemplateForm />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/ativos/:id/servicos/novo"
-        element={
-          <RequireAuth>
-            <ServiceForm />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="*"
-        element={
-          <RequireAuth>
-            <NotFound />
-          </RequireAuth>
-        }
-      />
-    </Routes>
+        <Route
+          path="/ativos/:id/servicos/novo"
+          element={
+            <RequireAuth>
+              <ServiceForm />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <RequireAuth>
+              <NotFound />
+            </RequireAuth>
+          }
+        />
+      </Routes>
+      {/* banner de update do PWA — nível app, fora das rotas */}
+      <UpdateBar />
+    </>
   );
 }

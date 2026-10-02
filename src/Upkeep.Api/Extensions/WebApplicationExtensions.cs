@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.StaticFiles;
 using Scalar.AspNetCore;
 using Upkeep.Api.Assets;
 using Upkeep.Api.Auth;
@@ -26,8 +27,12 @@ public static class WebApplicationExtensions
         // SPA: estáticos do wwwroot (preenchido no build Docker pelo stage node) e
         // fallback p/ as rotas do router. Sem wwwroot (tests/dev) é no-op: endpoints da
         // API e /health continuam intactos — o fallback só pega paths não-mapeados.
+        // .webmanifest não está no mapa padrão de content types (viraria
+        // application/octet-stream e o Chrome recusaria o manifest do PWA).
+        var contentTypes = new FileExtensionContentTypeProvider();
+        contentTypes.Mappings[".webmanifest"] = "application/manifest+json";
         app.UseDefaultFiles();
-        app.UseStaticFiles();
+        app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = contentTypes });
 
         app.MapOpenApi();
         if (!app.Environment.IsProduction())

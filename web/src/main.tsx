@@ -15,6 +15,7 @@ import "./app.css";
 import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { SessionProvider } from "./state/session";
+import { registerServiceWorker } from "./sw-register";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -27,3 +28,7 @@ createRoot(document.getElementById("root")!).render(
     </BrowserRouter>
   </StrictMode>,
 );
+
+// PWA: registra o SW só em produção (dentro do módulo há o gate duplo
+// import.meta.env.PROD + 'serviceWorker' in navigator).
+registerServiceWorker();

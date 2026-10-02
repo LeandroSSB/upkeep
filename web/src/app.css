@@ -698,6 +698,35 @@ h2 {
   border-top: 1px solid var(--line);
 }
 
+/* ---- update bar: nova versão do PWA disponível ----
+   Barra discreta no rodapé (mesmo tom do toast: --ink com texto --paper, só
+   que persistente e clicável). Sobra a tabbar nas telas "de bolso". */
+.update-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(26, 33, 27, 0.24);
+  font-size: 14px;
+}
+.update-bar__btn {
+  padding: 8px 14px;
+  border: 1px solid var(--paper);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* ---- acessibilidade ---- */
 :focus-visible {
   outline: none;
