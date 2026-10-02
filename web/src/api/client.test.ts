@@ -93,6 +93,26 @@ describe("apiFetch — rotação de refresh", () => {
     expect(cleared).not.toHaveBeenCalled();
   });
 
+  it("401 → refresh 503 (hiccup do servidor) → ApiError(0) e a sessão sobrevive", async () => {
+    // 502/503 durante deploy/restart do backend: o servidor não rejeitou o
+    // token — limpar a sessão aqui deslogaria o usuário à toa.
+    setSession("access-antigo", "refresh-1");
+    const cleared = vi.fn();
+    onSessionCleared(cleared);
+    fetchMock.mockImplementation(async (input) => {
+      if (String(input) === "/api/auth/refresh") return new Response(null, { status: 503 });
+      return res(401);
+    });
+
+    const err = await apiFetch("/assets").catch((e) => e);
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(0);
+    expect((err as ApiError).title).toBe("Sem conexão com o servidor");
+    expect(localStorage.getItem("upkeep-refresh")).toBe("refresh-1"); // sobreviveu
+    expect(cleared).not.toHaveBeenCalled();
+  });
+
   it("duas 401 concorrentes disparam UM único /auth/refresh", async () => {
     setSession("access-antigo", "refresh-1");
     fetchMock.mockImplementation(async (input, init) => {

@@ -73,8 +73,10 @@ async function rotate(): Promise<RefreshResult> {
       body: JSON.stringify({ refreshToken: current }),
     });
     if (!res.ok) {
-      // refresh inválido/expirado: não há o que recuperar
-      return { ok: false, clearSession: true };
+      // 4xx = definitivo (refresh rejeitado — sessão morta, limpar). 5xx =
+      // hiccup do servidor (nginx restart em deploy, 502/503): o servidor não
+      // disse nada sobre o token — sessão presumivelmente intacta, NÃO limpar.
+      return { ok: false, clearSession: res.status < 500 };
     }
     const tokens = (await res.json()) as { accessToken: string; refreshToken: string };
     setSession(tokens.accessToken, tokens.refreshToken);
