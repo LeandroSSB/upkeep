@@ -2,8 +2,6 @@
 
 API para rastreio de manutenção de ativos — carro, casa, aparelhos. Registre o que precisa de manutenção periódica (troca de óleo a cada 10.000 km, filtro de ar a cada 6 meses, revisão do boiler anual...) e a API calcula **o que está vencendo, o que vence em breve e quanto você já gastou**.
 
-> Projeto de aprendizado do ecossistema **.NET** — stack 100% nativa, sem frameworks de terceiros escondendo o ASP.NET Core. Design completo em [`docs/superpowers/specs/2026-10-02-upkeep-api-design.md`](docs/superpowers/specs/2026-10-02-upkeep-api-design.md).
-
 ## Como funciona
 
 1. **Ativos** — cadastre o que você mantém: `Corsa 2012` (veículo, com odômetro), `Apartamento` (casa), `Geladeira Brastemp` (aparelho).
@@ -64,8 +62,6 @@ tests/Upkeep.IntegrationTests/  API real + Postgres via Testcontainers
 ```
 
 ## Rodando
-
-> ⚠️ **WSL2**: builds e testes **nunca rodam local** — pesado derruba o ambiente. Usar CI ou `ssh megalan` (Docker). Local é só editar/commit/push.
 
 ```bash
 # dev (no megalan ou onde houver Docker):
