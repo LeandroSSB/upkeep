@@ -115,6 +115,7 @@ public class AuthTests(ApiFixture fixture)
             new { email, password = "SenhaForte!123" }, ct);
         reg.EnsureSuccessStatusCode();
         var auth = await reg.Content.ReadFromJsonAsync<AuthResponse>(ct);
+        var userId = auth!.User.Id;
         await client.PostAsJsonAsync("/auth/login", new { email, password = "SenhaForte!123" }, ct);
         var prePurge = await client.PostAsJsonAsync("/auth/login",
             new { email, password = "SenhaForte!123" }, ct);
@@ -124,7 +125,7 @@ public class AuthTests(ApiFixture fixture)
         using (var scope = fixture.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<UpkeepDbContext>();
-            var tokens = await db.RefreshTokens.Where(t => t.UserId == auth!.User.Id)
+            var tokens = await db.RefreshTokens.Where(t => t.UserId == userId)
                 .OrderBy(t => t.CreatedAt).ToListAsync(ct);
             Assert.True(tokens.Count >= 3, $"esperados 3 tokens, achei {tokens.Count}");
             expiradoId = tokens[0].Id;
@@ -141,7 +142,7 @@ public class AuthTests(ApiFixture fixture)
         using (var scope = fixture.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<UpkeepDbContext>();
-            var restantes = await db.RefreshTokens.Where(t => t.UserId == auth.User.Id).ToListAsync(ct);
+            var restantes = await db.RefreshTokens.Where(t => t.UserId == userId).ToListAsync(ct);
             // os 2 alvo do purge sumiram (sem o purge permaneceriam no banco)
             Assert.DoesNotContain(restantes, t => t.Id == expiradoId);
             Assert.DoesNotContain(restantes, t => t.Id == revogadoId);
