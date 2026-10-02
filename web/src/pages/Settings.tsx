@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMe, testNotification, updateNtfyTopic, type Me } from "../api/auth";
 import { ApiError } from "../api/client";
+import { exportUserData } from "../api/export";
 import { AppShell } from "../components/AppShell";
 import { Field } from "../components/Field";
 import { Toast } from "../components/Toast";
@@ -76,6 +77,8 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   function validate(value: string): string | undefined {
@@ -127,6 +130,29 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
       setTestError(err instanceof ApiError ? err.title : "Algo deu errado. Tente de novo.");
     } finally {
       setTesting(false);
+    }
+  }
+
+  // M6: export dos dados próprios — blob → download via object URL + <a download>.
+  // O nome do arquivo vem do content-disposition do backend (upkeep-export-yyyy-MM-dd.json).
+  async function onExport() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const { blob, filename } = await exportUserData();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setToast("Download iniciado");
+    } catch (err) {
+      setExportError(err instanceof ApiError ? err.title : "Algo deu errado. Tente de novo.");
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -200,6 +226,21 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
           </p>
         )}
       </form>
+
+      <div className="settings-data">
+        <h2>Seus dados</h2>
+        <p className="settings-topic__hint">
+          Baixe um arquivo JSON com todos os seus ativos, planos de manutenção e serviços.
+        </p>
+        <button type="button" className="btn" onClick={onExport} disabled={exporting}>
+          {exporting ? "Preparando…" : "Exportar meus dados"}
+        </button>
+        {exportError && (
+          <p className="form-error" role="alert">
+            {exportError}
+          </p>
+        )}
+      </div>
 
       <div className="settings-footer">
         <button type="button" className="link link--danger" onClick={onLogout}>

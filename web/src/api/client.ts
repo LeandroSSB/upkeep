@@ -109,7 +109,9 @@ async function toApiError(res: Response): Promise<ApiError> {
   return new ApiError(res.status, title, errors);
 }
 
-async function request<T>(path: string, init: RequestInit & { auth?: boolean }, retried: boolean): Promise<T> {
+/** Núcleo do request: fetch + tratamento de 401 (refresh/rotação). Devolve o
+ *  Response cru — quem chamou decide o que fazer com o corpo. */
+async function requestRaw(path: string, init: RequestInit & { auth?: boolean }, retried: boolean): Promise<Response> {
   const { auth } = init;
 
   let res: Response;
@@ -126,7 +128,7 @@ async function request<T>(path: string, init: RequestInit & { auth?: boolean }, 
     if (!retried && refreshToken) {
       const rotation = await refresh();
       if (rotation.ok) {
-        return request<T>(path, init, true); // buildInit refeita: Authorization novo
+        return requestRaw(path, init, true); // buildInit refeita: Authorization novo
       }
       if (!rotation.clearSession) {
         // blip de rede durante o refresh: a sessão não foi rejeitada — mantém
@@ -139,6 +141,12 @@ async function request<T>(path: string, init: RequestInit & { auth?: boolean }, 
     throw new ApiError(401, "Sessão expirada. Entre de novo.");
   }
 
+  return res;
+}
+
+async function request<T>(path: string, init: RequestInit & { auth?: boolean }, retried: boolean): Promise<T> {
+  const res = await requestRaw(path, init, retried);
+
   if (res.ok) {
     return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
   }
@@ -148,4 +156,13 @@ async function request<T>(path: string, init: RequestInit & { auth?: boolean }, 
 
 export function apiFetch<T>(path: string, init?: RequestInit & { auth?: boolean }): Promise<T> {
   return request<T>(path, init ?? {}, false);
+}
+
+/** Igual ao apiFetch (auth, refresh em 401, ApiError), mas devolve o Response
+ *  cru em vez de fazer res.json() — para respostas que não são JSON de API
+ *  (hoje: blob do /export). Erro 4xx/5xx continua virando ApiError. */
+export async function apiFetchRaw(path: string, init?: RequestInit & { auth?: boolean }): Promise<Response> {
+  const res = await requestRaw(path, init ?? {}, false);
+  if (!res.ok) throw await toApiError(res);
+  return res;
 }

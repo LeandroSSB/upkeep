@@ -689,6 +689,14 @@ h2 {
 .settings-topic__hint {
   color: var(--ink-soft);
 }
+/* ---- Ajustes: exportar meus dados (M6) ---- */
+.settings-data {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin-top: 28px;
+}
+
 /* separação dos perigosos: sair da conta */
 .settings-footer {
   display: flex;
