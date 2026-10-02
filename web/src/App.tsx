@@ -1,10 +1,41 @@
-import { Route, Routes } from "react-router-dom";
+import type { ReactNode } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
+import { useSession } from "./state/session";
+
+// Carregando a sessão: shell vazio (header só) — não pisca "/entrar" em quem
+// já tem refresh salvo nem Home em quem não tem.
+function LoadingShell() {
+  return (
+    <div className="shell">
+      <header className="app-header">
+        <span className="wordmark">upkeep</span>
+        <span className="dot" aria-hidden="true" />
+      </header>
+    </div>
+  );
+}
+
+function RequireAuth({ children }: { children: ReactNode }) {
+  const { user, loading } = useSession();
+  if (loading) return <LoadingShell />;
+  if (!user) return <Navigate to="/entrar" replace />;
+  return <>{children}</>;
+}
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/entrar" element={<Login />} />
+      <Route
+        path="/"
+        element={
+          <RequireAuth>
+            <Home />
+          </RequireAuth>
+        }
+      />
     </Routes>
   );
 }

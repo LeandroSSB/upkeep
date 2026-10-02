@@ -213,6 +213,31 @@ h2 {
   text-decoration: none;
 }
 
+/* ---- Login: alternância entrar/criar + erros ---- */
+.login-switch {
+  margin: 8px 0 20px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--workshop-blue);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+.field__error {
+  font-size: 14px;
+  color: var(--tag-red);
+}
+.form-error {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--tag-red);
+}
+
 /* ---- acessibilidade ---- */
 :focus-visible {
   outline: none;

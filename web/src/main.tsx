@@ -13,11 +13,14 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "./tokens.css";
 import "./app.css";
 import App from "./App";
+import { SessionProvider } from "./state/session";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <SessionProvider>
+        <App />
+      </SessionProvider>
     </BrowserRouter>
   </StrictMode>,
 );
