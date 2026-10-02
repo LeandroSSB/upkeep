@@ -27,3 +27,6 @@ graphify-out/
 .idea/
 *.swp
 .DS_Store
+
+# superpowers SDD scratch (ledger, briefs)
+.superpowers/
