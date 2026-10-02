@@ -28,6 +28,11 @@ services:
       ConnectionStrings__Upkeep: Host=db;Database=${POSTGRES_DB:-upkeep};Username=${POSTGRES_USER:-upkeep};Password=${POSTGRES_PASSWORD}
       Jwt__Key: ${JWT_KEY}
       ApplyMigrations: "true"
+      # Lembretes ntfy (v1.1): opt-in por usuário (PUT /me/ntfy-topic); worker varre
+      # diariamente às Ntfy__CheckHourUtc. Desligado por default no dev.
+      Ntfy__Enabled: ${NTFY_ENABLED:-false}
+      Ntfy__Server: ${NTFY_SERVER:-https://ntfy.sh}
+      Ntfy__CheckHourUtc: ${NTFY_CHECK_HOUR_UTC:-11}
     ports:
       - "${API_PORT:-8080}:8080"
 

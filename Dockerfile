@@ -7,11 +7,13 @@ COPY . .
 RUN dotnet restore src/Upkeep.Api/Upkeep.Api.csproj \
  && dotnet publish src/Upkeep.Api/Upkeep.Api.csproj -c Release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+# Chiseled: ~120MB a menos que o aspnet:10.0 completo; sem ICU/glibc apps extras —
+# exige <InvariantGlobalization>true</InvariantGlobalization> no csproj da Api.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled
 WORKDIR /app
 COPY --from=build /app .
 EXPOSE 8080
-# Não roda como root: usuário app da imagem base (ENV APP_UID=1654). API não escreve
-# em disco (Serilog Console) e escuta na 8080 (>1024) — sem necessidade de root.
+# Não roda como root: usuário app da imagem base (ENV APP_UID=1654, presente também
+# no chiseled). API não escreve em disco (Serilog Console) e escuta na 8080 (>1024).
 USER $APP_UID
 ENTRYPOINT ["dotnet", "Upkeep.Api.dll"]
