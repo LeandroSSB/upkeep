@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -9,6 +10,9 @@ namespace Upkeep.IntegrationTests;
 /// Relatório de custos (Task 11): GET /reports/costs — agregação por asset
 /// (GroupBy traduzido p/ SQL), filtros opcionais assetId/from/to (datas
 /// inclusivas), sempre escopado ao usuário; assetId alheio → vazio (filtro).
+/// Task M6-2: ?groupBy=month soma à resposta a régua mensal de 12 meses
+/// (clampada ao período from/to, meses vazios com zero) — sem o parâmetro,
+/// porMes vem null (compat com clientes antigos).
 /// </summary>
 [Collection("ApiTests")]
 public class ReportTests(ApiFixture fixture)
@@ -184,13 +188,136 @@ public class ReportTests(ApiFixture fixture)
         Assert.Equal(HttpStatusCode.Unauthorized,
             (await anon.GetAsync("/reports/costs", ct)).StatusCode);
     }
+
+    // ---- groupBy=month: régua mensal de 12 meses (Task M6-2) ----
+
+    /// <summary>Primeiro dia do mês a N meses do atual (UTC) — dia 1 nunca é futuro.</summary>
+    private static DateOnly Mes(int offset) =>
+        new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddMonths(offset);
+
+    private static string Chave(DateOnly mes) =>
+        mes.ToString("yyyy-MM", CultureInfo.InvariantCulture);
+
+    [Fact]
+    public async Task GroupBy_month_regua_de_12_com_valores_nos_meses_e_zeros()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var asset = await CreateAssetAsync(client, ct);
+
+        // 3 meses distintos dentro da janela default (últimos 12)
+        await PostServiceAsync(client, asset, Mes(-9), 10m, ct);
+        await PostServiceAsync(client, asset, Mes(-4), 200m, ct);
+        await PostServiceAsync(client, asset, Mes(0), 100.50m, ct);
+        await PostServiceAsync(client, asset, Mes(0), 50m, ct);
+
+        var rel = await GetReportAsync(client, ct, "groupBy=month");
+
+        Assert.NotNull(rel.PorMes);
+        Assert.Equal(12, rel.PorMes.Count);
+        Assert.Equal(Chave(Mes(-11)), rel.PorMes[0].Mes); // ordem cronológica
+        Assert.Equal(Chave(Mes(0)), rel.PorMes[^1].Mes);  // termina no mês atual
+
+        var porChave = rel.PorMes.ToDictionary(m => m.Mes);
+        Assert.Equal(10m, porChave[Chave(Mes(-9))].Total);
+        Assert.Equal(1, porChave[Chave(Mes(-9))].Quantidade);
+        Assert.Equal(200m, porChave[Chave(Mes(-4))].Total);
+        Assert.Equal(150.50m, porChave[Chave(Mes(0))].Total); // 100,50 + 50
+        Assert.Equal(2, porChave[Chave(Mes(0))].Quantidade);
+
+        var comDado = new HashSet<string> { Chave(Mes(-9)), Chave(Mes(-4)), Chave(Mes(0)) };
+        Assert.All(rel.PorMes.Where(m => !comDado.Contains(m.Mes)), m =>
+        {
+            Assert.Equal(0m, m.Total); // mês vazio entra na régua com zero
+            Assert.Equal(0, m.Quantidade);
+        });
+
+        Assert.Equal(rel.Total, rel.PorMes.Sum(m => m.Total)); // régua soma = total
+        Assert.Single(rel.PorAsset); // porAsset segue presente (groupBy soma visão)
+    }
+
+    [Fact]
+    public async Task GroupBy_month_from_to_clampa_a_regua_ao_periodo()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var asset = await CreateAssetAsync(client, ct);
+
+        await PostServiceAsync(client, asset, Mes(-2), 30m, ct);
+        await PostServiceAsync(client, asset, Mes(0), 70m, ct);
+        await PostServiceAsync(client, asset, Mes(-5), 999m, ct); // fora da janela
+
+        var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+        var rel = await GetReportAsync(client, ct,
+            $"from={Mes(-2):O}&to={hoje:O}&groupBy=month");
+
+        Assert.Equal(3, rel.PorMes!.Count); // régua clampada: -2, -1 e atual
+        Assert.Equal(Chave(Mes(-2)), rel.PorMes[0].Mes);
+        Assert.Equal(30m, rel.PorMes[0].Total);
+        Assert.Equal(0m, rel.PorMes[1].Total); // mês vazio intermediário
+        Assert.Equal(Chave(Mes(0)), rel.PorMes[2].Mes);
+        Assert.Equal(70m, rel.PorMes[2].Total);
+        Assert.Equal(100m, rel.Total); // 999 ficou fora (from) e fora da régua
+
+        // from antigo NÃO estica a régua: interseção mantém a janela default de 12
+        var amplo = await GetReportAsync(client, ct, "from=2020-01-01&groupBy=month");
+        Assert.Equal(12, amplo.PorMes!.Count);
+        Assert.Equal(Chave(Mes(-11)), amplo.PorMes[0].Mes);
+        Assert.Equal(999m, amplo.PorMes.ToDictionary(m => m.Mes)[Chave(Mes(-5))].Total);
+        Assert.Equal(amplo.Total, amplo.PorMes.Sum(m => m.Total));
+    }
+
+    [Fact]
+    public async Task GroupBy_month_respeita_filtro_de_assetId()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var a = await CreateAssetAsync(client, ct, "Asset A");
+        var b = await CreateAssetAsync(client, ct, "Asset B");
+
+        await PostServiceAsync(client, a, Mes(-1), 400m, ct);
+        await PostServiceAsync(client, b, Mes(-1), 25m, ct);
+        await PostServiceAsync(client, b, Mes(-1), 75m, ct);
+
+        var rel = await GetReportAsync(client, ct, $"assetId={b}&groupBy=month");
+
+        var comDado = rel.PorMes!.Where(m => m.Total > 0).ToList();
+        Assert.Single(comDado); // só o mês com serviço de B conta
+        Assert.Equal(Chave(Mes(-1)), comDado[0].Mes);
+        Assert.Equal(100m, comDado[0].Total); // 25 + 75 — nada do asset A
+        Assert.Equal(2, comDado[0].Quantidade);
+        Assert.Equal(100m, rel.Total);
+        Assert.Single(rel.PorAsset); // só B
+    }
+
+    [Fact]
+    public async Task Sem_groupBy_porMes_null_e_porAsset_como_antes()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var asset = await CreateAssetAsync(client, ct);
+        await PostServiceAsync(client, asset, Mes(-3), 123m, ct);
+
+        var rel = await GetReportAsync(client, ct); // sem groupBy na query
+
+        Assert.Null(rel.PorMes); // compat: cliente antigo não recebe o campo
+        Assert.Single(rel.PorAsset);
+        Assert.Equal(asset, rel.PorAsset[0].AssetId);
+        Assert.Equal(123m, rel.Total);
+    }
 }
 
 public sealed record CostReportResponse(
     decimal Total,
     List<CostByAssetResponse> PorAsset,
     DateOnly? De,
-    DateOnly? Ate);
+    DateOnly? Ate,
+    List<CostByMonthResponse>? PorMes = null);
+
+public sealed record CostByMonthResponse(
+    string Mes,
+    decimal Total,
+    int Quantidade);
 
 public sealed record CostByAssetResponse(
     Guid AssetId,

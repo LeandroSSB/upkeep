@@ -32,6 +32,24 @@ export function formatDate(iso: string): string {
   return `${get("day")} ${get("month").replace(".", "")} ${get("year")}`;
 }
 
+// "yyyy-MM" da API (mês, sem dia): "mar 2026". O pt-BR abrevia mês standalone
+// com ponto ("mar.") e o format() composto insere um "de" ("mar. de 2026") —
+// por isso recompomos as partes na mão, com o ponto limpo.
+const monthYear = new Intl.DateTimeFormat("pt-BR", {
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+export function formatMonth(iso: string): string {
+  const [year, month] = iso.split("-").map(Number);
+  if (!year || !month) return iso; // entrada fora do contrato volta como veio
+  const parts = monthYear.formatToParts(new Date(Date.UTC(year, month - 1, 1)));
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("month").replace(".", "")} ${get("year")}`;
+}
+
 export function statusLabel(status: Status): string {
   switch (status) {
     case "vencido":

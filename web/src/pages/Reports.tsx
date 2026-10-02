@@ -1,11 +1,12 @@
-// Relatórios — custo total e por ativo no período escolhido. Filtros (período +
-// ativo) rebuscam na hora; barras horizontais proporcionais ao maior total.
+// Relatórios — custo total com quebra por ativo ou por mês no período escolhido.
+// Filtros (período + ativo) e o toggle de agrupamento refazem o fetch na hora;
+// barras horizontais proporcionais ao maior total da visão ativa.
 import { useEffect, useState } from "react";
 import { listAssets, type Asset } from "../api/assets";
 import { ApiError } from "../api/client";
-import { getCostReport, type CostByAsset, type CostReport } from "../api/reports";
+import { getCostReport, type CostReport } from "../api/reports";
 import { AppShell } from "../components/AppShell";
-import { formatBRL } from "../lib/format";
+import { formatBRL, formatMonth } from "../lib/format";
 
 function plural(n: number, um: string, varios: string): string {
   return `${n} ${n === 1 ? um : varios}`;
@@ -16,11 +17,14 @@ type Phase =
   | { kind: "error"; message: string }
   | { kind: "ready"; report: CostReport };
 
+type View = "asset" | "month";
+
 export default function Reports() {
   // string vazia = sem filtro (o parâmetro nem vai na query)
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [assetId, setAssetId] = useState("");
+  const [view, setView] = useState<View>("asset");
 
   // opções do select — independentes do relatório: falha aqui não bloqueia a tabela
   const [assets, setAssets] = useState<Asset[] | null>(null);
@@ -47,13 +51,13 @@ export default function Reports() {
     };
   }, [attempt]);
 
-  // mudança de filtro refaz o fetch na hora (sem debounce: 3 controles leves);
-  // com dados já na tela, mantemos a tabela e sinalizamos "Atualizando…"
+  // mudança de filtro ou de visão refaz o fetch na hora (sem debounce: controles
+  // leves); com dados já na tela, mantemos a tabela e sinalizamos "Atualizando…"
   useEffect(() => {
     let cancelled = false;
     setPhase((p) => (p.kind === "ready" ? p : { kind: "loading" }));
     setRefreshing(true);
-    getCostReport({ assetId, from, to })
+    getCostReport({ assetId, from, to, groupBy: view === "month" ? "month" : undefined })
       .then((report) => {
         if (!cancelled) setPhase({ kind: "ready", report });
       })
@@ -71,13 +75,37 @@ export default function Reports() {
     return () => {
       cancelled = true;
     };
-  }, [assetId, from, to, attempt]);
+  }, [assetId, from, to, view, attempt]);
 
   const report = phase.kind === "ready" ? phase.report : null;
+  const months = report?.porMes ?? [];
+  // visão mês: régua toda zerada (ou clampada vazia) = mesmo empty state
+  const temCusto =
+    report !== null &&
+    (view === "asset" ? report.porAsset.length > 0 : months.some((m) => m.total > 0));
 
   return (
     <AppShell>
       <h1>Relatórios</h1>
+
+        <div className="report-toggle" role="group" aria-label="Agrupar custos">
+          <button
+            type="button"
+            className={`btn${view === "asset" ? " btn--primary" : ""}`}
+            aria-pressed={view === "asset"}
+            onClick={() => setView("asset")}
+          >
+            Por ativo
+          </button>
+          <button
+            type="button"
+            className={`btn${view === "month" ? " btn--primary" : ""}`}
+            aria-pressed={view === "month"}
+            onClick={() => setView("month")}
+          >
+            Por mês
+          </button>
+        </div>
 
         <div className="report-filters">
           <div className="field">
@@ -122,21 +150,44 @@ export default function Reports() {
           </div>
         )}
 
-        {report && report.porAsset.length === 0 && (
-          <p className="section-empty">Nenhum custo no período.</p>
-        )}
+        {report && !temCusto && <p className="section-empty">Nenhum custo no período.</p>}
 
-        {report && report.porAsset.length > 0 && (
+        {report && temCusto && (
           <>
             <p className="eyebrow">Total no período</p>
             <p className="display-xl report-total">{formatBRL(report.total)}</p>
 
-            <p className="eyebrow">Custo por ativo</p>
-            <ul className="bar-list">
-              {report.porAsset.map((row) => (
-                <BarRow key={row.assetId} row={row} max={maxTotal(report)} />
-              ))}
-            </ul>
+            {view === "asset" ? (
+              <>
+                <p className="eyebrow">Custo por ativo</p>
+                <ul className="bar-list">
+                  {report.porAsset.map((row) => (
+                    <BarRow
+                      key={row.assetId}
+                      nome={row.nome}
+                      quantidade={row.quantidade}
+                      total={row.total}
+                      max={maxTotal(report.porAsset)}
+                    />
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                <p className="eyebrow">Custo por mês</p>
+                <ul className="bar-list">
+                  {months.map((row) => (
+                    <BarRow
+                      key={row.mes}
+                      nome={formatMonth(row.mes)}
+                      quantidade={row.quantidade}
+                      total={row.total}
+                      max={maxTotal(months)}
+                    />
+                  ))}
+                </ul>
+              </>
+            )}
           </>
         )}
 
@@ -149,20 +200,32 @@ export default function Reports() {
   );
 }
 
-/** A API já devolve total desc; Math.max por robustez (largura 100% = maior). */
-function maxTotal(report: CostReport): number {
-  return Math.max(...report.porAsset.map((r) => r.total));
+/** A API já devolve as visões ordenadas (asset: total desc; mês: régua
+ * cronológica); Math.max por robustez (largura 100% = maior da visão ativa). */
+function maxTotal(rows: { total: number }[]): number {
+  return Math.max(...rows.map((r) => r.total));
 }
 
-/** Linha do por-asset: nome + contagem + valor mono, barra proporcional ao máximo. */
-function BarRow({ row, max }: { row: CostByAsset; max: number }) {
-  const pct = max > 0 ? (row.total / max) * 100 : 0;
+/** Linha de barra (por ativo ou por mês): nome + contagem + valor mono,
+ * barra proporcional ao máximo da visão ativa. */
+function BarRow({
+  nome,
+  quantidade,
+  total,
+  max,
+}: {
+  nome: string;
+  quantidade: number;
+  total: number;
+  max: number;
+}) {
+  const pct = max > 0 ? (total / max) * 100 : 0;
   return (
     <li className="bar-row">
       <p className="bar-row__top">
-        <span className="bar-row__nome">{row.nome}</span>
-        <span className="bar-row__qtd">{plural(row.quantidade, "serviço", "serviços")}</span>
-        <span className="bar-row__valor">{formatBRL(row.total)}</span>
+        <span className="bar-row__nome">{nome}</span>
+        <span className="bar-row__qtd">{plural(quantidade, "serviço", "serviços")}</span>
+        <span className="bar-row__valor">{formatBRL(total)}</span>
       </p>
       <div className="bar-row__track">
         <div className="bar-row__fill" style={{ width: `${pct}%` }} />

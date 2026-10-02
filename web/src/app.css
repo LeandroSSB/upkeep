@@ -615,6 +615,17 @@ h2 {
   flex: 1;
 }
 
+/* ---- Relatórios: alternância por ativo / por mês ---- */
+.report-toggle {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.report-toggle .btn {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
 /* ---- Relatórios: filtros de período/ativo ---- */
 .report-filters {
   display: flex;
