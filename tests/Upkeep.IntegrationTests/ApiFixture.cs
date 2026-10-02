@@ -28,6 +28,9 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Jwt:Audience", "upkeep-tests");
         builder.UseSetting("Jwt:AccessMinutes", "15");
         builder.UseSetting("Jwt:RefreshDays", "7");
+        // Suíte compartilha um host: dezenas de register/login no /auth esbarrariam no
+        // limite padrão (10/min) e virariam 429 espúrios — limite alto nos testes.
+        builder.UseSetting("RateLimit:PermitLimit", "1000");
         builder.UseSetting("webroot", "");
     }
 
