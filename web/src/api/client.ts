@@ -53,12 +53,17 @@ export function refresh(): Promise<boolean> {
 }
 
 async function rotate(): Promise<boolean> {
-  if (!refreshToken) return false;
+  // localStorage é a fonte da verdade: com duas abas, a aba A pode ter rotacionado
+  // o token depois que este módulo carregou — apresentar o antigo dispara a reuse
+  // detection do backend e revoga a sessão inteira. Fallback p/ a variável se a
+  // chave ainda não existir.
+  const current = localStorage.getItem(REFRESH_KEY) ?? refreshToken;
+  if (!current) return false;
   try {
     const res = await fetch("/api/auth/refresh", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({ refreshToken: current }),
     });
     if (!res.ok) {
       setSession(null, null); // refresh inválido/expirado: não há o que recuperar
@@ -104,6 +109,8 @@ async function request<T>(path: string, init: RequestInit & { auth?: boolean }, 
   }
 
   if (res.status === 401 && auth !== false) {
+    // sync antes do refresh: outra aba pode ter rotacionado (localStorage na frente)
+    refreshToken = localStorage.getItem(REFRESH_KEY);
     // uma única tentativa de refresh, depois UMA retry da original
     if (!retried && refreshToken && (await refresh())) {
       return request<T>(path, init, true); // buildInit refeita: Authorization novo

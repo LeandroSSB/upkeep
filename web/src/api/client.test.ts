@@ -87,6 +87,25 @@ describe("apiFetch — rotação de refresh", () => {
     expect(callsTo("/auth/refresh")).toHaveLength(1);
   });
 
+  it("401 em aba B envia o refresh MAIS NOVO do localStorage (aba A rotacionou antes)", async () => {
+    // cenário duas abas: esta aba (B) tem refresh-1 em memória, mas a aba A já
+    // rotacionou e persistiu refresh-2 — enviar refresh-1 revogaria a sessão toda.
+    setSession("access-1", "refresh-1");
+    localStorage.setItem("upkeep-refresh", "refresh-2");
+    fetchMock.mockImplementation(async (input, init) => {
+      if (String(input) === "/api/auth/refresh") {
+        return res(200, { accessToken: "access-2", refreshToken: "refresh-3" });
+      }
+      return authHeader(init).includes("access-2") ? res(200, { ok: true }) : res(401);
+    });
+
+    const data = await apiFetch("/assets");
+
+    expect(data).toEqual({ ok: true });
+    const refreshCall = callsTo("/auth/refresh")[0];
+    expect(JSON.parse(String(refreshCall[1]!.body))).toEqual({ refreshToken: "refresh-2" });
+  });
+
   it("com auth:false não tenta refresh em 401 (login com senha errada)", async () => {
     setSession("access-antigo", "refresh-1");
     fetchMock.mockResolvedValue(res(401));
