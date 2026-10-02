@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import AssetDetail from "./pages/AssetDetail";
+import AssetForm from "./pages/AssetForm";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import { useSession } from "./state/session";
@@ -33,6 +35,23 @@ export default function App() {
         element={
           <RequireAuth>
             <Home />
+          </RequireAuth>
+        }
+      />
+      {/* novo é estático e vence :id no ranking do router — ordem aqui não decide */}
+      <Route
+        path="/ativos/novo"
+        element={
+          <RequireAuth>
+            <AssetForm />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/ativos/:id"
+        element={
+          <RequireAuth>
+            <AssetDetail />
           </RequireAuth>
         }
       />
