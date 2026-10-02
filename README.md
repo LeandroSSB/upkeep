@@ -78,5 +78,5 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - [x] **Fase 1** — Setup da solution + auth completa (register/login/refresh rotativo)
 - [x] **Fase 2** — Ativos, templates e serviços (CRUD + validação)
 - [x] **Fase 3** — `DueCalculator` + status agregado + relatório de custos
-- [ ] **Fase 4** — Docker multi-stage, CI GitHub Actions, deploy no megalan
+- [x] **Fase 4** — Docker multi-stage, CI GitHub Actions, deploy no megalan
 - [ ] **Futuro** — Lembretes via **ntfy** quando algo vence · frontend React consumindo a API
