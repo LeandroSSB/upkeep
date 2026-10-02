@@ -1,0 +1,29 @@
+# ===== .NET =====
+bin/
+obj/
+*.user
+*.suo
+.vs/
+artifacts/
+TestResults/
+*.binlog
+
+# ===== Contexto exclusivo desta máquina (NUNCA commitar — repo público) =====
+.claude/
+CLAUDE.md
+docs/superpowers/plans/
+docs/superpowers/brainstorms/
+docs/plans/
+graphify-out/
+.local/
+
+# ===== Segredos =====
+.env
+.env.*
+!.env.example
+
+# ===== IDE / OS =====
+.vscode/
+.idea/
+*.swp
+.DS_Store
