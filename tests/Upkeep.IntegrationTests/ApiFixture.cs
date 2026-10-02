@@ -26,8 +26,8 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Jwt:Key", "chave-de-teste-bem-longa-com-256-bits-minimo!!");
         builder.UseSetting("Jwt:Issuer", "upkeep-tests");
         builder.UseSetting("Jwt:Audience", "upkeep-tests");
-        builder.UseSetting("AccessTokens:Minutes", "15");
-        builder.UseSetting("RefreshTokens:Days", "7");
+        builder.UseSetting("Jwt:AccessMinutes", "15");
+        builder.UseSetting("Jwt:RefreshDays", "7");
         builder.UseSetting("webroot", "");
     }
 
