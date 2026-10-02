@@ -1,5 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Upkeep.Infrastructure;
 using Xunit;
 
 namespace Upkeep.IntegrationTests;
@@ -98,6 +101,63 @@ public class AuthTests(ApiFixture fixture)
         var cascade = await fixture.CreateClient().PostAsJsonAsync("/auth/refresh",
             new { refreshToken = novo.RefreshToken }, ct);
         Assert.Equal(HttpStatusCode.Unauthorized, cascade.StatusCode);
+    }
+    [Fact]
+    public async Task Login_purga_refresh_tokens_expirados_e_antigos()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var client = fixture.CreateClient();
+        var email = "purge@test.local";
+
+        // 3 refresh tokens: register + login + login — os 2 primeiros serão alvo do
+        // purge (expirado / revogado há 40d) e o 3º permanece válido
+        var reg = await client.PostAsJsonAsync("/auth/register",
+            new { email, password = "SenhaForte!123" }, ct);
+        reg.EnsureSuccessStatusCode();
+        var auth = await reg.Content.ReadFromJsonAsync<AuthResponse>(ct);
+        await client.PostAsJsonAsync("/auth/login", new { email, password = "SenhaForte!123" }, ct);
+        var prePurge = await client.PostAsJsonAsync("/auth/login",
+            new { email, password = "SenhaForte!123" }, ct);
+        prePurge.EnsureSuccessStatusCode();
+
+        Guid expiradoId, revogadoId;
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<UpkeepDbContext>();
+            var tokens = await db.RefreshTokens.Where(t => t.UserId == auth!.User.Id)
+                .OrderBy(t => t.CreatedAt).ToListAsync(ct);
+            Assert.True(tokens.Count >= 3, $"esperados 3 tokens, achei {tokens.Count}");
+            expiradoId = tokens[0].Id;
+            revogadoId = tokens[1].Id;
+            tokens[0].ExpiresAt = DateTime.UtcNow.AddDays(-1);
+            tokens[1].RevokedAt = DateTime.UtcNow.AddDays(-40);
+            await db.SaveChangesAsync(ct);
+        }
+
+        var resp = await client.PostAsJsonAsync("/auth/login",
+            new { email, password = "SenhaForte!123" }, ct);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        using (var scope = fixture.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<UpkeepDbContext>();
+            var restantes = await db.RefreshTokens.Where(t => t.UserId == auth.User.Id).ToListAsync(ct);
+            // os 2 alvo do purge sumiram (sem o purge permaneceriam no banco)
+            Assert.DoesNotContain(restantes, t => t.Id == expiradoId);
+            Assert.DoesNotContain(restantes, t => t.Id == revogadoId);
+            // nenhum token expirado ou revogado há mais de 30d sobreviveu para esse user
+            var cutoff = DateTime.UtcNow.AddDays(-30);
+            Assert.DoesNotContain(restantes, t => t.ExpiresAt <= DateTime.UtcNow);
+            Assert.DoesNotContain(restantes, t => t.RevokedAt is not null && t.RevokedAt <= cutoff);
+            // sobraram válidos: o emitido antes do purge + o novo do último login
+            Assert.True(restantes.Count >= 2, $"esperados >=2 tokens válidos, achei {restantes.Count}");
+        }
+
+        // o refresh token emitido pelo último login funciona (purge não deletou o recém-criado)
+        var finalAuth = await resp.Content.ReadFromJsonAsync<AuthResponse>(ct);
+        var refresh = await client.PostAsJsonAsync("/auth/refresh",
+            new { refreshToken = finalAuth!.RefreshToken }, ct);
+        Assert.Equal(HttpStatusCode.OK, refresh.StatusCode);
     }
 }
 
