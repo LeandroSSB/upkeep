@@ -18,3 +18,5 @@ jobs:
       - run: dotnet restore upkeep.sln
       - run: dotnet build upkeep.sln --no-restore --configuration Release
       - run: dotnet test upkeep.sln --no-build --configuration Release
+      # Smoke de imagem: Dockerfile + .dockerignore buildam limpos.
+      - run: docker build -t upkeep-api-ci .

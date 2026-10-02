@@ -1,0 +1,9 @@
+bin/
+obj/
+.git/
+.superpowers/
+.claude/
+docs/
+tests/
+README.md
+.env*

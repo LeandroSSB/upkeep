@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
@@ -102,6 +103,15 @@ builder.Services.AddRateLimiter(o =>
 });
 
 var app = builder.Build();
+
+// Migrations automáticas no boot (deploy Docker: ApplyMigrations=true). Guard
+// necessário: a suíte de integração (ApiFixture, env Testing) migra sozinha e
+// NÃO seta a flag.
+if (app.Configuration.GetValue<bool>("ApplyMigrations"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<UpkeepDbContext>().Database.MigrateAsync();
+}
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseAuthentication();
