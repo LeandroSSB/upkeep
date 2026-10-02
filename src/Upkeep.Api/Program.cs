@@ -13,6 +13,7 @@ using Upkeep.Api.Assets;
 using Upkeep.Api.Auth;
 using Upkeep.Api.Me;
 using Upkeep.Api.Middleware;
+using Upkeep.Api.Notifications;
 using Upkeep.Api.Reports;
 using Upkeep.Api.Services;
 using Upkeep.Api.Templates;
@@ -37,6 +38,16 @@ builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IPasswordHasher, UpkeepPasswordHasher>();
 builder.Services.AddScoped<IStatusService, StatusService>();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
+
+// ntfy: lembretes diários de manutenções vencidas. O worker diário só sobe com
+// Ntfy:Enabled=true (padrão false — tests/dev não varrem nada nem saem pra rede).
+builder.Services.Configure<NtfyOptions>(builder.Configuration.GetSection("Ntfy"));
+var ntfy = builder.Configuration.GetSection("Ntfy").Get<NtfyOptions>() ?? new NtfyOptions();
+builder.Services.AddSingleton(ntfy); // instância bindada p/ DueReminderService
+builder.Services.AddHttpClient("ntfy");
+builder.Services.AddScoped<INotificationService, DueReminderService>();
+if (ntfy.Enabled)
+    builder.Services.AddHostedService<NtfyReminderWorker>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>

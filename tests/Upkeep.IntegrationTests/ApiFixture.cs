@@ -1,8 +1,11 @@
+using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
 using Testcontainers.PostgreSql;
 using Upkeep.Infrastructure;
 using Xunit;
@@ -13,6 +16,12 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _db = new PostgreSqlBuilder("postgres:18-alpine")
         .Build();
+
+    /// <summary>
+    /// POSTs ntfy capturados pelo handler abaixo — (tópico do JSON, JSON crú).
+    /// Tests limpam no início (Clear) e a suíte nunca sai pra rede real.
+    /// </summary>
+    public List<(string Topic, string Json)> CapturedNtfy { get; } = [];
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -32,6 +41,12 @@ public sealed class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         // limite padrão (10/min) e virariam 429 espúrios — limite alto nos testes.
         builder.UseSetting("RateLimit:PermitLimit", "1000");
         builder.UseSetting("webroot", "");
+        // Ntfy:Enabled fica false (default) — o worker diário NÃO é registrado nos tests.
+        // Client "ntfy" troca o handler por um capturador: DueReminderService roda
+        // de verdade, mas o POST nunca sai da memória do teste.
+        builder.ConfigureServices(s => s.Configure<HttpClientFactoryOptions>("ntfy", o =>
+            o.HttpMessageHandlerBuilderActions.Add(b =>
+                b.PrimaryHandler = new CapturingNtfyHandler(CapturedNtfy))));
     }
 
     public async ValueTask InitializeAsync()
@@ -69,3 +84,19 @@ public static class ApiFixtureExtensions
 
 public sealed record AuthResponse(string AccessToken, string RefreshToken, AuthUser User);
 public sealed record AuthUser(Guid Id, string Email);
+
+/// <summary>
+/// Handler do client "ntfy": grava (topic, JSON crú) na lista do fixture e responde 200
+/// vazio. Lê o corpo ANTES de responder (o conteúdo só é bufferizado uma vez).
+/// </summary>
+internal sealed class CapturingNtfyHandler(List<(string Topic, string Json)> sink) : HttpMessageHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var json = await request.Content!.ReadAsStringAsync(cancellationToken);
+        using var doc = JsonDocument.Parse(json);
+        sink.Add((doc.RootElement.GetProperty("topic").GetString() ?? "", json));
+        return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}") };
+    }
+}
