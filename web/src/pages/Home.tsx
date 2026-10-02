@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { listAssets, listTemplates, type Asset } from "../api/assets";
 import { ApiError } from "../api/client";
+import { AppShell } from "../components/AppShell";
 import { Sticker } from "../components/Sticker";
 import { templateDestaque, todayIso, worstTemplate } from "../lib/destaque";
 import { formatKm, statusLabel, typeLabel } from "../lib/format";
@@ -102,17 +103,29 @@ export default function Home() {
   }, [heroId]);
 
   return (
-    <div className="shell">
-      <header className="app-header">
-        <span className="wordmark">upkeep</span>
-        <span
-          className={worst ? `dot dot--${worst}` : "dot"}
-          aria-label={worst ? `pior status: ${statusLabel(worst)}` : undefined}
-          aria-hidden={worst ? undefined : true}
-        />
-      </header>
-
-      <main>
+    <AppShell
+      dot={
+        worst ? (
+          <span
+            className={`dot dot--${worst}`}
+            aria-label={`pior status: ${statusLabel(worst)}`}
+          />
+        ) : undefined
+      }
+      after={
+        phase.kind === "ready" && (
+          <button
+            type="button"
+            className="fab"
+            aria-label="Cadastrar ativo"
+            onClick={() => navigate("/ativos/novo")}
+          >
+            +
+          </button>
+        )
+      }
+    >
+      <>
         {phase.kind === "loading" && <p className="loading">Carregando…</p>}
 
         {phase.kind === "error" && (
@@ -217,18 +230,7 @@ export default function Home() {
             </ul>
           </>
         )}
-      </main>
-
-      {phase.kind === "ready" && (
-        <button
-          type="button"
-          className="fab"
-          aria-label="Cadastrar ativo"
-          onClick={() => navigate("/ativos/novo")}
-        >
-          +
-        </button>
-      )}
-    </div>
+      </>
+    </AppShell>
   );
 }

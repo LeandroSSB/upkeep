@@ -6,13 +6,17 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { listAssets, listTemplates, type Asset, type AssetTemplate } from "../api/assets";
 import { ApiError } from "../api/client";
 import { createService, type ServiceInput } from "../api/services";
+import { AppShell } from "../components/AppShell";
 import { Field } from "../components/Field";
 import { todayIso } from "../lib/destaque";
 import { fieldMessage, leftoverMessage } from "../lib/formErrors";
 import { formatKmInput, parseKm } from "../lib/kmInput";
 import { formatBRLInput, parseBRL } from "../lib/money";
 
-const CAMPOS = ["templateId", "data", "odometro", "custo", "notas"];
+// Campos com slot de erro no formulário. templateId fica fora de propósito: sem
+// slot, o leftoverMessage sobe a mensagem do servidor (ex.: template de outro
+// asset) como erro do form, em vez de engolir pelo title genérico.
+const CAMPOS = ["data", "odometro", "custo", "notas"];
 
 type Phase =
   | { kind: "loading" }
@@ -62,13 +66,8 @@ export default function ServiceForm() {
   }, [assetId, attempt]);
 
   return (
-    <div className="shell">
-      <header className="app-header">
-        <span className="wordmark">upkeep</span>
-        <span className="dot" aria-hidden="true" />
-      </header>
-
-      <main>
+    <AppShell>
+      <>
         {phase.kind === "loading" && <p className="loading">Carregando…</p>}
 
         {phase.kind === "error" && (
@@ -94,8 +93,8 @@ export default function ServiceForm() {
         {phase.kind === "ready" && (
           <ServiceFields key={phase.asset.id} asset={phase.asset} templates={phase.templates} />
         )}
-      </main>
-    </div>
+      </>
+    </AppShell>
   );
 }
 

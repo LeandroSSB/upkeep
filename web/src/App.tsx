@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { AppShell } from "./components/AppShell";
 import { TabBar } from "./components/TabBar";
 import AssetDetail from "./pages/AssetDetail";
 import AssetForm from "./pages/AssetForm";
@@ -13,11 +14,14 @@ import { useSession } from "./state/session";
 
 // Telas "de bolso" (Home/Relatórios/Ajustes) compartilham a tabbar fixa — quem
 // entra no pathless layout abaixo tem a barra; /entrar, detalhe e formulários não.
+// A barra só pinta com user resolvido: sem ela o bootstrap pisca a tabbar antes
+// do redirect para /entrar (ou da Home, quando há refresh salvo).
 function TabbedLayout() {
+  const { user } = useSession();
   return (
     <>
       <Outlet />
-      <TabBar />
+      {user && <TabBar />}
     </>
   );
 }
@@ -25,13 +29,20 @@ function TabbedLayout() {
 // Carregando a sessão: shell vazio (header só) — não pisca "/entrar" em quem
 // já tem refresh salvo nem Home em quem não tem.
 function LoadingShell() {
+  return <AppShell />;
+}
+
+// URL fora do mapa (ex.: /foo) — mesmo tratamento do ativo não encontrado.
+function NotFound() {
   return (
-    <div className="shell">
-      <header className="app-header">
-        <span className="wordmark">upkeep</span>
-        <span className="dot" aria-hidden="true" />
-      </header>
-    </div>
+    <AppShell>
+      <div className="empty-state">
+        <p>Página não encontrada.</p>
+        <Link className="btn" to="/">
+          Voltar para o início
+        </Link>
+      </div>
+    </AppShell>
   );
 }
 
@@ -120,6 +131,14 @@ export default function App() {
         element={
           <RequireAuth>
             <ServiceForm />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <RequireAuth>
+            <NotFound />
           </RequireAuth>
         }
       />

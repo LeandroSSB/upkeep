@@ -67,6 +67,8 @@ tests/Upkeep.IntegrationTests/  API real + Postgres via Testcontainers
 # dev (no megalan ou onde houver Docker):
 docker compose up -d          # postgres + api
 
+# web (dev): cd web && npm run dev   # Vite com proxy /api; build de produção roda no Docker
+
 # CI (GitHub Actions): build + testes com Testcontainers
 
 # deploy (futuro, megalan):
@@ -80,4 +82,4 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml --env-file .env.
 - [x] **Fase 3** — `DueCalculator` + status agregado + relatório de custos
 - [x] **Fase 4** — Docker multi-stage, CI GitHub Actions, deploy no megalan
 - [x] **Lembretes via ntfy** quando algo vence (opt-in por usuário, varredura diária)
-- [ ] **Frontend React** consumindo a API
+- [x] **Frontend React** consumindo a API

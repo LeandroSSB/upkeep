@@ -10,6 +10,7 @@ import {
   type AssetInput,
 } from "../api/assets";
 import { ApiError } from "../api/client";
+import { AppShell } from "../components/AppShell";
 import { Field } from "../components/Field";
 import { typeLabel } from "../lib/format";
 import { fieldMessage, leftoverMessage } from "../lib/formErrors";
@@ -55,13 +56,8 @@ export default function AssetForm() {
   }, [id, editing, attempt]);
 
   return (
-    <div className="shell">
-      <header className="app-header">
-        <span className="wordmark">upkeep</span>
-        <span className="dot" aria-hidden="true" />
-      </header>
-
-      <main>
+    <AppShell>
+      <>
         {phase.kind === "loading" && <p className="loading">Carregando…</p>}
 
         {phase.kind === "error" && (
@@ -87,8 +83,8 @@ export default function AssetForm() {
         {phase.kind === "ready" && (
           <AssetFields key={phase.asset?.id ?? "novo"} asset={phase.asset} assetId={id} />
         )}
-      </main>
-    </div>
+      </>
+    </AppShell>
   );
 }
 

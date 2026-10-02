@@ -244,8 +244,10 @@ h2 {
 }
 
 /* toast: aviso de sucesso, rodapé central, some sozinho (sem animação).
-   Sobra a tabbar (telas Home/Relatórios/Ajustes); nas demais só fica um pouco alto. */
+   Sobra a tabbar (telas Home/Relatórios/Ajustes); nas demais só fica um pouco alto.
+   pointer-events:none — é só um aviso, não engole toques no que está atrás. */
 .toast {
+  pointer-events: none;
   position: fixed;
   left: 50%;
   bottom: calc(76px + env(safe-area-inset-bottom));

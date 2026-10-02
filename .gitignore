@@ -12,6 +12,10 @@ TestResults/
 node_modules/
 web/dist/
 
+# artefatos de QA do controller (screenshots playwright)
+qa*.png
+.playwright-mcp/
+
 
 .claude/
 CLAUDE.md

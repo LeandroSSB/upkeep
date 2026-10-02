@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { deleteAsset, listAssets, listTemplates, type Asset, type AssetTemplate } from "../api/assets";
 import { ApiError } from "../api/client";
 import { listServices, type Service } from "../api/services";
+import { AppShell } from "../components/AppShell";
 import { Sticker } from "../components/Sticker";
 import { Toast } from "../components/Toast";
 import { WorkOrderHeader } from "../components/WorkOrderHeader";
@@ -90,13 +91,16 @@ export default function AssetDetail() {
   }
 
   return (
-    <div className="shell">
-      <header className="app-header">
-        <span className="wordmark">upkeep</span>
-        <span className="dot" aria-hidden="true" />
-      </header>
-
-      <main>
+    <AppShell
+      after={
+        toast && (
+          <Toast
+            message={toast}
+            onHide={() => navigate(location.pathname, { replace: true })} // limpa o state
+          />
+        )
+      }
+    >
         {phase.kind === "loading" && <p className="loading">Carregando…</p>}
 
         {phase.kind === "error" && (
@@ -212,14 +216,6 @@ export default function AssetDetail() {
             </div>
           </>
         )}
-      </main>
-
-      {toast && (
-        <Toast
-          message={toast}
-          onHide={() => navigate(location.pathname, { replace: true })} // limpa o state
-        />
-      )}
-    </div>
+    </AppShell>
   );
 }

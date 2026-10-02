@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
+import { AppShell } from "../components/AppShell";
 import { useSession } from "../state/session";
 
 type Mode = "entrar" | "criar";
@@ -11,7 +12,7 @@ const EMAIL_INVALIDO = "E-mail inválido.";
 const SENHA_CURTA = "A senha precisa ter pelo menos 8 caracteres.";
 
 export default function Login() {
-  const { login, register } = useSession();
+  const { user, login, register } = useSession();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("entrar");
   const [email, setEmail] = useState("");
@@ -21,6 +22,9 @@ export default function Login() {
   const [sending, setSending] = useState(false);
 
   const isRegister = mode === "criar";
+
+  // já autenticado (refresh do bootstrap resolveu em /entrar): nada a fazer aqui
+  if (user) return <Navigate to="/" replace />;
 
   function switchMode(next: Mode) {
     setMode(next);
@@ -71,14 +75,8 @@ export default function Login() {
   }
 
   return (
-    <div className="shell">
-      <header className="app-header">
-        <span className="wordmark">upkeep</span>
-        <span className="dot" aria-hidden="true" />
-      </header>
-
-      <main>
-        <h1>{isRegister ? "Criar conta" : "Entrar"}</h1>
+    <AppShell>
+      <h1>{isRegister ? "Criar conta" : "Entrar"}</h1>
         <p className="login-switch">
           {isRegister ? (
             <>Já tem conta? <button type="button" className="link" onClick={() => switchMode("entrar")}>Entrar</button></>
@@ -122,7 +120,6 @@ export default function Login() {
             {isRegister ? "Criar conta" : "Entrar"}
           </button>
         </form>
-      </main>
-    </div>
+    </AppShell>
   );
 }

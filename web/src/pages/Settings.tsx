@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMe, updateNtfyTopic, type Me } from "../api/auth";
 import { ApiError } from "../api/client";
+import { AppShell } from "../components/AppShell";
 import { Field } from "../components/Field";
 import { Toast } from "../components/Toast";
 import { fieldMessage, leftoverMessage } from "../lib/formErrors";
@@ -43,14 +44,8 @@ export default function Settings() {
   }, [attempt]);
 
   return (
-    <div className="shell">
-      <header className="app-header">
-        <span className="wordmark">upkeep</span>
-        <span className="dot" aria-hidden="true" />
-      </header>
-
-      <main>
-        <h1>Ajustes</h1>
+    <AppShell>
+      <h1>Ajustes</h1>
 
         {phase.kind === "loading" && <p className="loading">Carregando…</p>}
 
@@ -66,8 +61,7 @@ export default function Settings() {
         )}
 
         {phase.kind === "ready" && <SettingsForm me={phase.me} />}
-      </main>
-    </div>
+    </AppShell>
   );
 }
 
@@ -133,7 +127,10 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
             value={topic}
             maxLength={64}
             placeholder="ex.: meus-lembretes"
-            onChange={(e) => setTopic(e.target.value)}
+            onChange={(e) => {
+              setTopic(e.target.value);
+              setTopicError(undefined); // erro do servidor/validação não sobrevive à edição
+            }}
             aria-invalid={topicError !== undefined}
           />
         </Field>

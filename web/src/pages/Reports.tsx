@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { listAssets, type Asset } from "../api/assets";
 import { ApiError } from "../api/client";
 import { getCostReport, type CostByAsset, type CostReport } from "../api/reports";
+import { AppShell } from "../components/AppShell";
 import { formatBRL } from "../lib/format";
 
 function plural(n: number, um: string, varios: string): string {
@@ -75,14 +76,8 @@ export default function Reports() {
   const report = phase.kind === "ready" ? phase.report : null;
 
   return (
-    <div className="shell">
-      <header className="app-header">
-        <span className="wordmark">upkeep</span>
-        <span className="dot" aria-hidden="true" />
-      </header>
-
-      <main>
-        <h1>Relatórios</h1>
+    <AppShell>
+      <h1>Relatórios</h1>
 
         <div className="report-filters">
           <div className="field">
@@ -150,8 +145,7 @@ export default function Reports() {
             Atualizando…
           </p>
         )}
-      </main>
-    </div>
+    </AppShell>
   );
 }
 
