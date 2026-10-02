@@ -30,7 +30,16 @@ public static class AuthEndpoints
             var (access, _) = tokens.CreateAccessToken(user);
             var (refreshRaw, refreshEntity) = tokens.CreateRefreshToken(user.Id, DateTime.UtcNow);
             db.RefreshTokens.Add(refreshEntity);
-            await db.SaveChangesAsync();
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // race do check-then-insert: duas requests passaram pelo AnyAsync juntas,
+                // o unique index derruba a segunda → mesmo 409 do caminho feliz
+                return Results.Conflict(new { title = "E-mail já cadastrado" });
+            }
             return Results.Created($"/users/{user.Id}",
                 new { accessToken = access, refreshToken = refreshRaw, user = new { id = user.Id, email = user.Email } });
         }).AddEndpointFilter<ValidationFilter<RegisterRequest>>();
@@ -45,6 +54,10 @@ public static class AuthEndpoints
             var (access, _) = tokens.CreateAccessToken(user);
             var (refreshRaw, refreshEntity) = tokens.CreateRefreshToken(user.Id, DateTime.UtcNow);
             db.RefreshTokens.Add(refreshEntity);
+            // purge no mesmo SaveChanges: expirados e revogados há mais de 30 dias
+            db.RefreshTokens.RemoveRange(db.RefreshTokens.Where(t =>
+                t.UserId == user.Id &&
+                (t.ExpiresAt <= DateTime.UtcNow || t.RevokedAt <= DateTime.UtcNow.AddDays(-30))));
             await db.SaveChangesAsync();
             return Results.Ok(new { accessToken = access, refreshToken = refreshRaw,
                 user = new { id = user.Id, email = user.Email } });
