@@ -1,5 +1,8 @@
-bin/
-obj/
+# bin/obj em QUALQUER nível: sem o **/ o dockerignore só casa na raiz, e o obj/ do
+# runner (project.assets.json com paths absolutos da MÁQUINA) sobrescreveria o obj/
+# do restore interno do Docker → NETSDK1064 no publish --no-restore.
+**/bin/
+**/obj/
 .git/
 .superpowers/
 .claude/

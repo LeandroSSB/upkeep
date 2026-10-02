@@ -9,12 +9,17 @@ RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
+# Layer caching: csprojs + Directory.Build.props ANTES do código → camada de restore
+# só invalida quando projeto/deps mudam (commit de código não repaga o restore).
+# tests/ está fora do build context (.dockerignore): restore pelo csproj da Api (puxa
+# Core+Infrastructure transitivamente), não pelo upkeep.sln.
+COPY Directory.Build.props .
+COPY src/Upkeep.Core/Upkeep.Core.csproj src/Upkeep.Core/
+COPY src/Upkeep.Infrastructure/Upkeep.Infrastructure.csproj src/Upkeep.Infrastructure/
+COPY src/Upkeep.Api/Upkeep.Api.csproj src/Upkeep.Api/
+RUN dotnet restore src/Upkeep.Api/Upkeep.Api.csproj
 COPY . .
-# Restore do csproj da Api (não upkeep.sln): tests/ está fora do build context
-# (.dockerignore) e o restore da solution falharia por projetos ausentes; o csproj
-# puxa Core+Infrastructure transitivamente.
-RUN dotnet restore src/Upkeep.Api/Upkeep.Api.csproj \
- && dotnet publish src/Upkeep.Api/Upkeep.Api.csproj -c Release -o /app --no-restore
+RUN dotnet publish src/Upkeep.Api/Upkeep.Api.csproj -c Release -o /app --no-restore
 
 # Chiseled: ~160MB a menos que o aspnet:10.0 completo; sem ICU/glibc apps extras —
 # exige <InvariantGlobalization>true</InvariantGlobalization> no csproj da Api.

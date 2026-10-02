@@ -61,11 +61,13 @@ public static class AuthEndpoints
             var (access, _) = tokens.CreateAccessToken(user);
             var (refreshRaw, refreshEntity) = tokens.CreateRefreshToken(user.Id, DateTime.UtcNow);
             db.RefreshTokens.Add(refreshEntity);
-            // purge no mesmo SaveChanges: expirados e revogados há mais de 30 dias
-            db.RefreshTokens.RemoveRange(db.RefreshTokens.Where(t =>
-                t.UserId == user.Id &&
-                (t.ExpiresAt <= DateTime.UtcNow || t.RevokedAt <= DateTime.UtcNow.AddDays(-30))));
+            // emite o token novo PRIMEIRO (SaveChanges) e só então o purge — ExecuteDelete
+            // roda fora do change tracker (1 SQL DELETE) e não pode engolir o insert acima
             await db.SaveChangesAsync();
+            await db.RefreshTokens.Where(t =>
+                    t.UserId == user.Id &&
+                    (t.ExpiresAt <= DateTime.UtcNow || t.RevokedAt <= DateTime.UtcNow.AddDays(-30)))
+                .ExecuteDeleteAsync();
             return Results.Ok(new { accessToken = access, refreshToken = refreshRaw,
                 user = new { id = user.Id, email = user.Email } });
         }).AddEndpointFilter<ValidationFilter<LoginRequest>>();

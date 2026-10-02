@@ -37,7 +37,7 @@ public static class ServiceEndpoints
         group.MapGet("", async (Guid assetId, UpkeepDbContext db, ClaimsPrincipal user) =>
         {
             var userId = user.GetUserId();
-            if (!await db.Assets.AnyAsync(a => a.Id == assetId && a.UserId == userId))
+            if (await db.GetOwnedAssetAsync(assetId, userId) is null)
                 return Results.NotFound(); // asset alheio não vaza — 404, não lista vazia
 
             var services = await db.Services
@@ -50,7 +50,7 @@ public static class ServiceEndpoints
 
         group.MapPost("", async (Guid assetId, CreateServiceRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>
         {
-            var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == assetId && a.UserId == user.GetUserId());
+            var asset = await db.GetOwnedAssetAsync(assetId, user.GetUserId());
             if (asset is null) return Results.NotFound();
 
             // template informado: deve existir E pertencer ao MESMO asset (asset é o recurso

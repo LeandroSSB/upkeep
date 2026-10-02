@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
 using Upkeep;
 using Upkeep.Api.Auth;
 using Upkeep.Api.Common;
@@ -13,20 +12,11 @@ public static class AssetEndpoints
     {
         var group = app.MapGroup("/assets").WithTags("Assets").RequireAuthorization();
 
-        group.MapGet("", async (UpkeepDbContext db, IStatusService statusService, ClaimsPrincipal user,
-            CancellationToken ct) =>
+        group.MapGet("", async (IStatusService statusService, ClaimsPrincipal user, CancellationToken ct) =>
         {
-            var userId = user.GetUserId();
-            var assets = await db.Assets.Where(a => a.UserId == userId).ToListAsync(ct);
-
-            // status por asset na v1 (N de assets é pequeno); batch se um dia pesar
-            var result = new List<AssetResponse>(assets.Count);
-            foreach (var asset in assets)
-            {
-                var status = await statusService.GetAssetStatusAsync(asset.Id, userId, ct);
-                result.Add(AssetResponse.From(asset, status));
-            }
-            return Results.Ok(result);
+            // batch: status de TODOS os assets em 3 queries totais (assets → templates → serviços)
+            var statuses = await statusService.GetAllAssetStatusesAsync(user.GetUserId(), ct);
+            return Results.Ok(statuses.Select(p => AssetResponse.From(p.Asset, p.Status)));
         });
 
         group.MapPost("", async (CreateAssetRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>
@@ -55,7 +45,7 @@ public static class AssetEndpoints
 
         group.MapPut("/{id}", async (Guid id, UpdateAssetRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>
         {
-            var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == id && a.UserId == user.GetUserId());
+            var asset = await db.GetOwnedAssetAsync(id, user.GetUserId());
             if (asset is null) return Results.NotFound(); // não vaza existência de asset alheio
 
             asset.Nome = req.Nome.Trim();
@@ -68,7 +58,7 @@ public static class AssetEndpoints
 
         group.MapDelete("/{id}", async (Guid id, UpkeepDbContext db, ClaimsPrincipal user) =>
         {
-            var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == id && a.UserId == user.GetUserId());
+            var asset = await db.GetOwnedAssetAsync(id, user.GetUserId());
             if (asset is null) return Results.NotFound();
 
             db.Assets.Remove(asset); // cascade em templates/services (by design)
@@ -78,7 +68,7 @@ public static class AssetEndpoints
 
         group.MapPost("/{id}/odometer", async (Guid id, UpdateOdometerRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>
         {
-            var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == id && a.UserId == user.GetUserId());
+            var asset = await db.GetOwnedAssetAsync(id, user.GetUserId());
             if (asset is null) return Results.NotFound();
             if (asset.Tipo != AssetTipo.Veiculo)
                 return Results.ValidationProblem(OdometroSoVeiculo("odometer"));

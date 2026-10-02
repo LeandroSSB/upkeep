@@ -74,4 +74,12 @@ public static class UpkeepDbContextExtensions
     public static IServiceCollection AddUpkeepDbContext(
         this IServiceCollection services, string connectionString) =>
         services.AddDbContext<UpkeepDbContext>(o => o.UseNpgsql(connectionString));
+
+    /// <summary>
+    /// Asset pelo id ESCOPADO ao dono — o padrão de ownership repetido nos endpoints de
+    /// assets/templates/services (null = não existe OU é de outro usuário → 404 sem vazar qual).
+    /// </summary>
+    public static Task<Asset?> GetOwnedAssetAsync(
+        this UpkeepDbContext db, Guid id, Guid userId, CancellationToken ct = default) =>
+        db.Assets.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId, ct);
 }

@@ -62,7 +62,7 @@ public static class TemplateEndpoints
             ClaimsPrincipal user, CancellationToken ct) =>
         {
             var userId = user.GetUserId();
-            if (!await db.Assets.AnyAsync(a => a.Id == assetId && a.UserId == userId, ct))
+            if (await db.GetOwnedAssetAsync(assetId, userId, ct) is null)
                 return Results.NotFound(); // asset alheio não vaza — 404, não lista vazia
 
             var templates = await db.Templates.Where(t => t.AssetId == assetId).ToListAsync(ct);
@@ -75,7 +75,7 @@ public static class TemplateEndpoints
         nested.MapPost("", async (Guid assetId, CreateTemplateRequest req, UpkeepDbContext db, ClaimsPrincipal user) =>
         {
             var userId = user.GetUserId();
-            if (!await db.Assets.AnyAsync(a => a.Id == assetId && a.UserId == userId))
+            if (await db.GetOwnedAssetAsync(assetId, userId) is null)
                 return Results.NotFound();
 
             var template = new MaintenanceTemplate
