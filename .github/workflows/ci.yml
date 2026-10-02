@@ -17,3 +17,4 @@ jobs:
           dotnet-version: "10.0.x"
       - run: dotnet restore upkeep.sln
       - run: dotnet build upkeep.sln --no-restore --configuration Release
+      - run: dotnet test upkeep.sln --no-build --configuration Release
