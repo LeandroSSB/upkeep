@@ -11,6 +11,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using Upkeep.Api.Assets;
 using Upkeep.Api.Auth;
+using Upkeep.Api.Me;
 using Upkeep.Api.Middleware;
 using Upkeep.Api.Reports;
 using Upkeep.Api.Services;
@@ -133,6 +134,7 @@ app.MapGet("/health/ready", async (UpkeepDbContext db) =>
         : Results.Problem(statusCode: 503, title: "Database unavailable"));
 
 app.MapAuthEndpoints();
+app.MapMeEndpoints();
 app.MapAssetEndpoints();
 app.MapTemplateEndpoints();
 app.MapServiceEndpoints();
