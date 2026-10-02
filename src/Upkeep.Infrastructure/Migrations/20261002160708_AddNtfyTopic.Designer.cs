@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Upkeep.Infrastructure;
@@ -11,9 +12,11 @@ using Upkeep.Infrastructure;
 namespace Upkeep.Infrastructure.Migrations
 {
     [DbContext(typeof(UpkeepDbContext))]
-    partial class UpkeepDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261002160708_AddNtfyTopic")]
+    partial class AddNtfyTopic
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
