@@ -77,7 +77,7 @@ public class TemplateTests(ApiFixture fixture)
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var list = await resp.Content.ReadFromJsonAsync<List<TemplateResponse>>(Json, ct);
         var ids = list!.Select(t => t.Id).ToHashSet();
-        Assert.Equal(2, list.Count);
+        Assert.Equal(2, list!.Count);
         Assert.Contains(t1, ids);
         Assert.Contains(t2, ids);
     }
@@ -145,7 +145,8 @@ public class TemplateTests(ApiFixture fixture)
             new { titulo = "Sem intervalo", intervaloKm = (int?)null, intervaloMeses = (int?)null }, ct);
         Assert.Equal(HttpStatusCode.BadRequest, cria.StatusCode);
         var problem = await cria.Content.ReadFromJsonAsync<ValidationProblemBody>(Json, ct);
-        Assert.NotNull(problem!.Errors);
+        Assert.NotNull(problem);
+        Assert.NotNull(problem.Errors);
         Assert.Contains("Informe intervalo_km e/ou intervalo_meses",
             string.Join("; ", problem.Errors.Values.SelectMany(v => v)));
 
