@@ -206,6 +206,53 @@ h2 {
   color: var(--ink);
 }
 
+/* ---- Formulários (ativo / template / serviço) ---- */
+/* subtítulo de contexto sob o h1: nome do ativo, aviso de tipo... */
+.form-sub {
+  margin: 4px 0 20px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+/* valores digitados (km, custo) em mono, como no logbook */
+.input-mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+/* checkbox que habilita o campo logo abaixo (intervalos por km/meses) */
+.field > label.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.check input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--workshop-blue);
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* toast: aviso de sucesso, rodapé central, some sozinho (sem animação) */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 12px 18px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(26, 33, 27, 0.24);
+  font-weight: 500;
+}
+
 /* ---- tabbar (placeholder de estilo; componente nas tasks de telas) ---- */
 .tabbar {
   position: fixed;

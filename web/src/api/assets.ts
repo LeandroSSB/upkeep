@@ -40,6 +40,51 @@ export async function listTemplates(assetId: string): Promise<AssetTemplate[]> {
   return apiFetch<AssetTemplate[]>(`/assets/${assetId}/templates`);
 }
 
+export interface AssetInput {
+  nome: string;
+  tipo: AssetTipo;
+  /** Só é aceito para veículo; null nos demais tipos. */
+  odometroAtual: number | null;
+  notas: string | null;
+}
+
+export async function createAsset(input: AssetInput): Promise<Asset> {
+  return apiFetch<Asset>("/assets", { method: "POST", body: JSON.stringify(input) });
+}
+
+/** PUT /assets/{id} substitui nome e notas (tipo não muda; odômetro é na tela do ativo). */
+export async function updateAsset(id: string, input: { nome: string; notas: string | null }): Promise<Asset> {
+  return apiFetch<Asset>(`/assets/${id}`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+export interface TemplateInput {
+  titulo: string;
+  categoria: string | null;
+  intervaloKm: number | null;
+  intervaloMeses: number | null;
+  custoEstimado: number | null;
+  baselineOdometro: number | null;
+  /** DateOnly "YYYY-MM-DD"; null → o servidor usa hoje. */
+  baselineData: string | null;
+}
+
+export async function createTemplate(assetId: string, input: TemplateInput): Promise<AssetTemplate> {
+  return apiFetch<AssetTemplate>(`/assets/${assetId}/templates`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+/** PUT /templates/{id} substitui todos os campos (mesma shape do create). */
+export async function updateTemplate(id: string, input: TemplateInput): Promise<AssetTemplate> {
+  return apiFetch<AssetTemplate>(`/templates/${id}`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+/** DELETE /templates/{id} → 204. 409 quando há serviços vinculados (FK restrict). */
+export async function deleteTemplate(id: string): Promise<void> {
+  return apiFetch<void>(`/templates/${id}`, { method: "DELETE" });
+}
+
 /**
  * POST /assets/{id}/odometer. Regra não-regressiva é do servidor: valor menor que
  * o atual → 400 com errors.odometer (o form mostra inline). Resposta é AssetResponse

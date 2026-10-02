@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AssetDetail from "./pages/AssetDetail";
 import AssetForm from "./pages/AssetForm";
-import EmConstrucao from "./pages/EmConstrucao";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import ServiceForm from "./pages/ServiceForm";
+import TemplateForm from "./pages/TemplateForm";
 import { useSession } from "./state/session";
 
 // Carregando a sessão: shell vazio (header só) — não pisca "/entrar" em quem
@@ -56,12 +57,21 @@ export default function App() {
           </RequireAuth>
         }
       />
-      {/* rotas da Task 5 — placeholder até os formulários existirem */}
+      {/* AssetForm decide criar/editar pela presença do :id na rota */}
+      <Route
+        path="/ativos/:id/editar"
+        element={
+          <RequireAuth>
+            <AssetForm />
+          </RequireAuth>
+        }
+      />
+      {/* TemplateForm decide nova/editar pela presença do :templateId */}
       <Route
         path="/ativos/:id/templates/novo"
         element={
           <RequireAuth>
-            <EmConstrucao titulo="Nova manutenção" />
+            <TemplateForm />
           </RequireAuth>
         }
       />
@@ -69,7 +79,7 @@ export default function App() {
         path="/ativos/:id/templates/:templateId"
         element={
           <RequireAuth>
-            <EmConstrucao titulo="Manutenção" />
+            <TemplateForm />
           </RequireAuth>
         }
       />
@@ -77,15 +87,7 @@ export default function App() {
         path="/ativos/:id/servicos/novo"
         element={
           <RequireAuth>
-            <EmConstrucao titulo="Lançar serviço" />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/ativos/:id/editar"
-        element={
-          <RequireAuth>
-            <EmConstrucao titulo="Editar ativo" />
+            <ServiceForm />
           </RequireAuth>
         }
       />

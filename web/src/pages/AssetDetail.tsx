@@ -2,11 +2,12 @@
 // logbook de serviços. Formulários (template/serviço/editar) chegam na Task 5 —
 // as rotas já existem como placeholder.
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { deleteAsset, listAssets, listTemplates, type Asset, type AssetTemplate } from "../api/assets";
 import { ApiError } from "../api/client";
 import { listServices, type Service } from "../api/services";
 import { Sticker } from "../components/Sticker";
+import { Toast } from "../components/Toast";
 import { WorkOrderHeader } from "../components/WorkOrderHeader";
 import { templateDestaque, todayIso } from "../lib/destaque";
 import { formatBRL, formatDate, formatKm } from "../lib/format";
@@ -20,6 +21,9 @@ type Phase =
 export default function AssetDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Forms de sucesso (ex.: lançar serviço) chegam com { toast } no state da rota
+  const toast = (location.state as { toast?: string } | null)?.toast ?? null;
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [confirming, setConfirming] = useState(false);
@@ -209,6 +213,13 @@ export default function AssetDetail() {
           </>
         )}
       </main>
+
+      {toast && (
+        <Toast
+          message={toast}
+          onHide={() => navigate(location.pathname, { replace: true })} // limpa o state
+        />
+      )}
     </div>
   );
 }
