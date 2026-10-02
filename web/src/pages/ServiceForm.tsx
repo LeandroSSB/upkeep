@@ -10,7 +10,7 @@ import { Field } from "../components/Field";
 import { todayIso } from "../lib/destaque";
 import { fieldMessage, leftoverMessage } from "../lib/formErrors";
 import { formatKmInput, parseKm } from "../lib/kmInput";
-import { parseBRL } from "../lib/money";
+import { formatBRLInput, parseBRL } from "../lib/money";
 
 const CAMPOS = ["templateId", "data", "odometro", "custo", "notas"];
 
@@ -225,6 +225,10 @@ function ServiceFields({ asset, templates }: { asset: Asset; templates: AssetTem
             placeholder="350,50"
             value={custo}
             onChange={(e) => setCusto(e.target.value)}
+            onBlur={() => {
+              const v = parseBRL(custo);
+              if (v !== null) setCusto(formatBRLInput(v));
+            }}
             aria-invalid={errs.custo !== undefined}
           />
         </Field>

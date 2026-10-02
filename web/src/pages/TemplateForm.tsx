@@ -281,6 +281,10 @@ function TemplateFields({ asset, template }: { asset: Asset; template: AssetTemp
             placeholder="350,50"
             value={custo}
             onChange={(e) => setCusto(e.target.value)}
+            onBlur={() => {
+              const v = parseBRL(custo);
+              if (v !== null) setCusto(formatBRLInput(v));
+            }}
             aria-invalid={errs.custo !== undefined}
           />
         </Field>

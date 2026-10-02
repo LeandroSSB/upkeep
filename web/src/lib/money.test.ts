@@ -16,6 +16,8 @@ describe("parseBRL", () => {
     expect(parseBRL("1.234,56")).toBe(1234.56);
     expect(parseBRL("1.234")).toBe(1234);
     expect(parseBRL("10.000")).toBe(10000);
+    // caso ambíguo de 2 dígitos: hábito US "350.50" também é milhar (reagrupa no blur)
+    expect(parseBRL("350.50")).toBe(35050);
     expect(parseBRL("R$ 350,50")).toBe(350.5);
     expect(parseBRL("R$350")).toBe(350);
     expect(parseBRL(" r$ 1.000,00 ")).toBe(1000);
