@@ -28,13 +28,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     setSession(null, stored);
     void (async () => {
-      if (await refresh()) {
+      const rotation = await refresh();
+      if (rotation.ok) {
         try {
           const me = await apiFetch<Me>("/me");
           if (!cancelled) setUser(me);
         } catch {
           setSession(null, null); // /me não deu conta: sessão inútil, limpa
         }
+      } else if (rotation.clearSession) {
+        setSession(null, null); // refresh rejeitado: token salvo não vale nada
+        // rede fora (clearSession false): mantém o token p/ tentar no próximo reload
       }
       if (!cancelled) setLoading(false);
     })();

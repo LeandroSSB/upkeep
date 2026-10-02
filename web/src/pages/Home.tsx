@@ -41,6 +41,7 @@ function CountDot({ status, count }: { status: Status; count: number }) {
     <span
       className={`count-dot count-dot--${status}${count > 0 ? " count-dot--on" : ""}`}
       title={count > 0 ? `${count} ${statusLabel(status)}` : `nenhum ${statusLabel(status)}`}
+      aria-hidden={count > 0 ? undefined : true}
     >
       {count > 0 ? count : ""}
     </span>

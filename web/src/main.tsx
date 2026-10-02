@@ -13,14 +13,17 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "./tokens.css";
 import "./app.css";
 import App from "./App";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { SessionProvider } from "./state/session";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <SessionProvider>
-        <App />
-      </SessionProvider>
+      <ErrorBoundary>
+        <SessionProvider>
+          <App />
+        </SessionProvider>
+      </ErrorBoundary>
     </BrowserRouter>
   </StrictMode>,
 );

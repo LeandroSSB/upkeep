@@ -39,11 +39,18 @@ function notifyCleared(): void {
   for (const listener of clearedListeners) listener();
 }
 
-/** Um único refresh em voo: duas 401 simultâneas não podem rodar duas rotações. */
-let refreshInFlight: Promise<boolean> | null = null;
+/**
+ * Resultado do refresh: `{ ok: false, clearSession: false }` distingue "rede
+ * fora" (sessão presumivelmente intacta — NÃO limpar) de falha definitiva
+ * (refresh rejeitado pelo servidor — sessão morta, limpar).
+ */
+export type RefreshResult = { ok: true } | { ok: false; clearSession: boolean };
 
-/** POST /auth/refresh com o token atual; true = sessão renovada (e rotacionada). */
-export function refresh(): Promise<boolean> {
+/** Um único refresh em voo: duas 401 simultâneas não podem rodar duas rotações. */
+let refreshInFlight: Promise<RefreshResult> | null = null;
+
+/** POST /auth/refresh com o token atual; ok:true = sessão renovada (e rotacionada). */
+export function refresh(): Promise<RefreshResult> {
   if (!refreshInFlight) {
     refreshInFlight = rotate().finally(() => {
       refreshInFlight = null;
@@ -52,13 +59,13 @@ export function refresh(): Promise<boolean> {
   return refreshInFlight;
 }
 
-async function rotate(): Promise<boolean> {
+async function rotate(): Promise<RefreshResult> {
   // localStorage é a fonte da verdade: com duas abas, a aba A pode ter rotacionado
   // o token depois que este módulo carregou — apresentar o antigo dispara a reuse
   // detection do backend e revoga a sessão inteira. Fallback p/ a variável se a
   // chave ainda não existir.
   const current = localStorage.getItem(REFRESH_KEY) ?? refreshToken;
-  if (!current) return false;
+  if (!current) return { ok: false, clearSession: true };
   try {
     const res = await fetch("/api/auth/refresh", {
       method: "POST",
@@ -66,14 +73,16 @@ async function rotate(): Promise<boolean> {
       body: JSON.stringify({ refreshToken: current }),
     });
     if (!res.ok) {
-      setSession(null, null); // refresh inválido/expirado: não há o que recuperar
-      return false;
+      // refresh inválido/expirado: não há o que recuperar
+      return { ok: false, clearSession: true };
     }
     const tokens = (await res.json()) as { accessToken: string; refreshToken: string };
     setSession(tokens.accessToken, tokens.refreshToken);
-    return true;
+    return { ok: true };
   } catch {
-    return false; // rede fora: quem chamou decide (apiFetch limpa e lança 401)
+    // rede fora: o servidor não disse nada sobre o token — a sessão pode estar
+    // ótima. Quem chamou só reporta falha de conexão, sem limpar nada.
+    return { ok: false, clearSession: false };
   }
 }
 
@@ -112,8 +121,16 @@ async function request<T>(path: string, init: RequestInit & { auth?: boolean }, 
     // sync antes do refresh: outra aba pode ter rotacionado (localStorage na frente)
     refreshToken = localStorage.getItem(REFRESH_KEY);
     // uma única tentativa de refresh, depois UMA retry da original
-    if (!retried && refreshToken && (await refresh())) {
-      return request<T>(path, init, true); // buildInit refeita: Authorization novo
+    if (!retried && refreshToken) {
+      const rotation = await refresh();
+      if (rotation.ok) {
+        return request<T>(path, init, true); // buildInit refeita: Authorization novo
+      }
+      if (!rotation.clearSession) {
+        // blip de rede durante o refresh: a sessão não foi rejeitada — mantém
+        // storage/memória intactos e falha só esta chamada como erro de conexão.
+        throw new ApiError(0, "Sem conexão com o servidor");
+      }
     }
     setSession(null, null);
     notifyCleared();

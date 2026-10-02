@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // client.ts vive de fetch + localStorage: jsdom (já devDep) dá os dois sem stub manual.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, setSession } from "./client";
+import { ApiError, apiFetch, onSessionCleared, setSession } from "./client";
 
 const fetchMock = vi.fn<typeof fetch>();
 vi.stubGlobal("fetch", fetchMock);
@@ -60,6 +60,8 @@ describe("apiFetch — rotação de refresh", () => {
 
   it("401 → refresh 401 → lança ApiError 401 e limpa a sessão", async () => {
     setSession("access-antigo", "refresh-1");
+    const cleared = vi.fn();
+    onSessionCleared(cleared);
     fetchMock.mockImplementation(async (input) =>
       String(input) === "/api/auth/refresh" ? res(401) : res(401));
 
@@ -68,6 +70,27 @@ describe("apiFetch — rotação de refresh", () => {
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).status).toBe(401);
     expect(localStorage.getItem("upkeep-refresh")).toBeNull();
+    expect(cleared).toHaveBeenCalled(); // "logout limpo" para quem escuta
+  });
+
+  it("401 → refresh com falha de REDE → ApiError(0) e a sessão sobrevive", async () => {
+    // blip de rede durante o refresh: o refresh token não é inválido, o servidor
+    // só estava inalcançável — limpar a sessão aqui deslogaria à toa.
+    setSession("access-antigo", "refresh-1");
+    const cleared = vi.fn();
+    onSessionCleared(cleared);
+    fetchMock.mockImplementation(async (input) => {
+      if (String(input) === "/api/auth/refresh") throw new TypeError("fetch failed");
+      return res(401);
+    });
+
+    const err = await apiFetch("/assets").catch((e) => e);
+
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(0);
+    expect((err as ApiError).title).toBe("Sem conexão com o servidor");
+    expect(localStorage.getItem("upkeep-refresh")).toBe("refresh-1"); // sobreviveu
+    expect(cleared).not.toHaveBeenCalled();
   });
 
   it("duas 401 concorrentes disparam UM único /auth/refresh", async () => {
