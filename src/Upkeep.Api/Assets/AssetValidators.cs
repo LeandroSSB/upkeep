@@ -6,7 +6,9 @@ public sealed class CreateAssetRequestValidator : AbstractValidator<CreateAssetR
 {
     public CreateAssetRequestValidator()
     {
-        RuleFor(x => x.Nome).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Nome)
+            .Must(n => !string.IsNullOrWhiteSpace(n)).WithMessage("Nome é obrigatório (sem apenas espaços)")
+            .MaximumLength(200);
         RuleFor(x => x.Tipo).NotEmpty(); // parse válido é regra de domínio no endpoint (precisa de contexto)
         RuleFor(x => x.OdometroAtual)
             .GreaterThanOrEqualTo(0).When(x => x.OdometroAtual.HasValue);
@@ -17,7 +19,9 @@ public sealed class UpdateAssetRequestValidator : AbstractValidator<UpdateAssetR
 {
     public UpdateAssetRequestValidator()
     {
-        RuleFor(x => x.Nome).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Nome)
+            .Must(n => !string.IsNullOrWhiteSpace(n)).WithMessage("Nome é obrigatório (sem apenas espaços)")
+            .MaximumLength(200);
     }
 }
 
