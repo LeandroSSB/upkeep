@@ -14,7 +14,7 @@ public sealed class ValidationFilter<T>(IServiceProvider sp) : IEndpointFilter
             var dto = ctx.Arguments.OfType<T>().FirstOrDefault();
             if (dto is null) // corpo JSON literal null chega vinculado como argumento null
                 return Results.ValidationProblem(
-                    new Dictionary<string, string[]> { [""] = ["Corpo da requisição inválido"] });
+                    new Dictionary<string, string[]> { ["corpo"] = ["Corpo da requisição inválido"] });
             var result = await validator.ValidateAsync(dto);
             if (!result.IsValid)
             {

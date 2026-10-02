@@ -69,7 +69,7 @@ public static class MeEndpoints
                 ["white_check_mark"], 3, ct);
             return enviado
                 ? Results.Ok(new { enviado = true })
-                : Results.Problem(title: "Não foi possível falar com o ntfy.sh — tente de novo", statusCode: 502);
+                : Results.Problem(title: "ntfy.sh não aceitou o envio — tente de novo", statusCode: 502);
         })
             .WithSummary("Envia 1 push ntfy de teste para o tópico salvo do usuário");
 

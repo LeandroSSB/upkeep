@@ -51,8 +51,10 @@ public class AuthTests(ApiFixture fixture)
         var resp = await fixture.CreateClient().PostAsync("/auth/register",
             new StringContent("null", Encoding.UTF8, "application/json"), ct);
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
-        Assert.Contains("Corpo da requisição inválido",
-            await resp.Content.ReadAsStringAsync(ct));
+        // guard com chave nomeada "corpo" (não "") — consumidor endereça o campo
+        var problem = await resp.Content.ReadFromJsonAsync<ValidationProblemBody>(ct);
+        Assert.NotNull(problem!.Errors);
+        Assert.Equal(["Corpo da requisição inválido"], problem.Errors["corpo"]);
     }
 
     [Fact]

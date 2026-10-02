@@ -10,7 +10,10 @@ namespace Upkeep.Api.Notifications;
 /// </summary>
 public interface INtfyPublisher
 {
-    /// <summary>true = ntfy aceitou (2xx); false = rede fora ou resposta não-2xx (já logado aqui).</summary>
+    /// <summary>
+    /// true = ntfy aceitou (2xx); false = rede fora ou resposta não-2xx (já logado aqui).
+    /// Cancelamento real do ct PROPAGA (OperationCanceledException) — não vira falha.
+    /// </summary>
     Task<bool> PublishAsync(
         string topic, string title, string message, string[] tags, int priority, CancellationToken ct);
 }
@@ -32,13 +35,22 @@ public sealed class NtfyPublisher(
             }, ct);
             if (resp.IsSuccessStatusCode) return true;
 
-            logger.LogWarning("ntfy respondeu {Status} ao push do tópico {Topic}",
-                (int)resp.StatusCode, topic);
+            // Corpo do erro (limitado, quebra de linha achatada) no log: distingue
+            // 429 "too many requests" de 502 outage sem precisar dig no servidor.
+            var corpo = (await resp.Content.ReadAsStringAsync(CancellationToken.None))
+                .Replace('\n', ' ').Replace('\r', ' ').Trim();
+            if (corpo.Length > 200) corpo = corpo[..200];
+            logger.LogWarning("ntfy respondeu {Status} ao push do tópico {Topic}: {Corpo}",
+                (int)resp.StatusCode, topic, corpo);
             return false;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            return false; // shutdown/cancelamento — não é falha de entrega
+            // Cancelamento REAL (shutdown/término): propaga em vez de devolver false —
+            // senão a varredura trataria o shutdown como "falha por usuário" e seguiria
+            // tentando os demais usuários com o token já cancelado. Timeout do HttpClient
+            // (TaskCanceledException SEM ct cancelado) não cai aqui: vai pro catch geral.
+            throw;
         }
         catch (Exception ex)
         {

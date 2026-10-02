@@ -111,8 +111,11 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
 
   // O teste dispara para o tópico SALVO no servidor — só faz sentido com o campo
   // preenchido (e válido), senão o usuário clicaria sem ter nada configurado.
+  // Dirty-gate: campo editado e ainda não salvo desabilita o teste (ele testaria
+  // o tópico ANTIGO, não o que está na tela) e mostra microcopy convidando a salvar.
   const topicTrimmed = topic.trim();
   const topicPreenchidoValido = topicTrimmed !== "" && TOPIC_PATTERN.test(topicTrimmed);
+  const topicDirty = topicTrimmed !== (me.ntfyTopic ?? "");
 
   async function onTestNotification() {
     setTesting(true);
@@ -181,11 +184,15 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
             type="button"
             className="btn"
             onClick={onTestNotification}
-            disabled={!topicPreenchidoValido || testing}
+            disabled={!topicPreenchidoValido || topicDirty || testing}
           >
             {testing ? "Enviando…" : "Testar notificação"}
           </button>
         </div>
+
+        {topicDirty && (
+          <p className="settings-topic__hint">Salve o tópico antes de testar.</p>
+        )}
 
         {testError && (
           <p className="form-error" role="alert">

@@ -1,3 +1,4 @@
+using System.Text;
 using Upkeep;
 using Upkeep.Api.Notifications;
 using Xunit;
@@ -85,8 +86,8 @@ public class ReminderTextTests
 
         var (_, body) = ReminderText.Format(items);
 
-        Assert.True(body.Length <= ReminderText.MaxBodyChars,
-            $"body tem {body.Length} chars, teto é {ReminderText.MaxBodyChars}");
+        Assert.True(body.Length <= ReminderText.MaxBodyBytes,
+            $"body tem {body.Length} chars, teto é {ReminderText.MaxBodyBytes}");
 
         var lines = body.Split('\n');
         Assert.StartsWith("- [vencido] Asset 000: Manutenção", lines[0]); // mais urgentes ficam
@@ -110,5 +111,38 @@ public class ReminderTextTests
         };
         var (_, body) = ReminderText.Format(items);
         Assert.Equal("- [vencido] Gol: Troca de óleo · venceu 2026-09-01", body); // sem sufixo de trunc
+    }
+
+    [Fact]
+    public void Body_com_muitos_acentos_trunca_por_bytes_nao_por_chars()
+    {
+        // 100 itens densos em acentos (ã/ç = 2 bytes cada no UTF-8): o corpo fica
+        // ABAIXO do teto em chars (o gate antigo por chars devolveria intacto) mas
+        // ACIMA em bytes — o limite real do ntfy é de bytes.
+        var items = Enumerable.Range(0, 100).Select(_ => new DueItem(
+            "Córrego", "Revisãoçãoção", DueStatus.Overdue, KmRemaining: null, DateDue: null)).ToList();
+
+        var full = string.Join("\n", items.Select(i => $"- [vencido] {i.AssetNome}: {i.TemplateTitulo}"));
+        Assert.True(full.Length <= ReminderText.MaxBodyBytes,
+            $"pré-condição falhou: {full.Length} chars — reduza os itens para o gate de chars passar");
+        Assert.True(Encoding.UTF8.GetByteCount(full) > ReminderText.MaxBodyBytes,
+            "pré-condição falhou: corpo não estoura o teto em bytes");
+
+        var (_, body) = ReminderText.Format(items);
+
+        var bytes = Encoding.UTF8.GetByteCount(body);
+        Assert.True(bytes <= ReminderText.MaxBodyBytes,
+            $"body tem {bytes} bytes, teto é {ReminderText.MaxBodyBytes}");
+
+        var lines = body.Split('\n');
+        Assert.All(lines[..^1], l => Assert.StartsWith("- [vencido] Córrego: Revisãoçãoção", l)); // linhas inteiras
+
+        // "+N itens" exato: mantidas + omitidas = total, nada sumiu sem contagem
+        var last = lines[^1];
+        Assert.StartsWith("… (+", last);
+        Assert.EndsWith(" itens)", last);
+        var omitted = int.Parse(last["… (+".Length..^" itens)".Length]);
+        Assert.True(omitted > 0);
+        Assert.Equal(items.Count, (lines.Length - 1) + omitted);
     }
 }

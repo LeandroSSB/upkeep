@@ -82,7 +82,9 @@ public sealed class DueReminderService(
         {
             var (title, body) = ReminderText.Format(items);
             // Falha num usuário não derruba a varredura dos demais — o publisher
-            // loga o erro (com o tópico) e devolve false.
+            // loga o erro (com o tópico) e devolve false. Única exceção: cancelamento
+            // real (shutdown) PROPAGA do publisher — abortar a varredura inteira em
+            // vez de contabilizar cada usuário restante como "falha".
             if (await ntfy.PublishAsync(topics[userId], title, body, ["wrench"],
                     items.Any(i => i.Status == DueStatus.Overdue) ? 4 : 3, ct))
                 sent++;

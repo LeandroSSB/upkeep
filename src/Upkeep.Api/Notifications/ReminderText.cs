@@ -1,3 +1,4 @@
+using System.Text;
 using Upkeep;
 
 namespace Upkeep.Api.Notifications;
@@ -21,14 +22,15 @@ public static class ReminderText
     private const string LabelDueSoon = "vence_em_breve";
 
     /// <summary>
-    /// Teto do body em CHARS. ntfy limita o request inteiro a 4096 bytes UTF-8; o
+    /// Teto do body em BYTES UTF-8. ntfy limita o request inteiro a 4096 bytes; o
     /// envelope JSON (topic ≤64 + title ~45 + tags/priority/chaves ~90) sobra ~200
-    /// bytes, daí 3800 (e não 4000). Aproximação por chars≈bytes: linha de lembrete
-    /// típica é quase toda ASCII (nomes/labels); a folga absorve multibyte pontual.
+    /// bytes, daí 3800 (e não 4000). Conta BYTES (não chars): nomes em pt-BR carregam
+    /// acentos multibyte (ã/ç = 2 bytes cada) e um corpo "pequeno em chars" estoura
+    /// o limite real do ntfy.
     /// </summary>
-    public const int MaxBodyChars = 3800;
+    public const int MaxBodyBytes = 3800;
 
-    /// <summary>Espaço reservado para a linha final "… (+N itens)" (16 chars no pior caso).</summary>
+    /// <summary>Espaço reservado para a linha final "… (+N itens)" ("…" = 3 bytes; ~17 bytes no pior caso).</summary>
     private const int FinalLineReserve = 20;
 
     public static (string Title, string Body) Format(IReadOnlyList<DueItem> items)
@@ -55,29 +57,44 @@ public static class ReminderText
     }
 
     /// <summary>
-    /// Trunca o body no limite de chars SEM cortar linha no meio: mantém linhas
-    /// inteiras (as mais urgentes, que vêm primeiro) e fecha com "… (+N itens)"
-    /// informando quantas ficaram de fora. Linha única maior que o teto (não ocorre
-    /// na prática: nome/título ≤200 chars) recebe corte duro na própria linha.
+    /// Trunca o body no limite de BYTES UTF-8 SEM cortar linha no meio: mantém
+    /// linhas inteiras (as mais urgentes, que vêm primeiro) e fecha com "… (+N
+    /// itens)" informando quantas ficaram de fora. Linha única maior que o teto
+    /// (não ocorre na prática: nome/título ≤200 chars) recebe corte duro na
+    /// própria linha — também por bytes, sempre em fronteira de char.
     /// </summary>
     internal static string TruncateBody(string body)
     {
-        if (body.Length <= MaxBodyChars) return body;
+        if (Encoding.UTF8.GetByteCount(body) <= MaxBodyBytes) return body;
 
         var lines = body.Split('\n');
         var kept = new List<string>();
         var used = 0;
         foreach (var line in lines)
         {
-            var cost = line.Length + (kept.Count > 0 ? 1 : 0); // +1 do '\n' separador
-            if (used + cost > MaxBodyChars - FinalLineReserve) break;
+            var cost = Encoding.UTF8.GetByteCount(line) + (kept.Count > 0 ? 1 : 0); // +1 do '\n' (1 byte)
+            if (used + cost > MaxBodyBytes - FinalLineReserve) break;
             kept.Add(line);
             used += cost;
         }
         if (kept.Count == 0)
-            kept.Add(lines[0][..(MaxBodyChars - FinalLineReserve)]);
+            kept.Add(PrefixFittingBytes(lines[0], MaxBodyBytes - FinalLineReserve));
 
         return string.Join("\n", kept) + $"\n… (+{lines.Length - kept.Count} itens)";
+    }
+
+    /// <summary>Maior prefixo que cabe em maxBytes UTF-8 (busca binária: byteCount é monótono no prefixo).</summary>
+    private static string PrefixFittingBytes(string s, int maxBytes)
+    {
+        var lo = 0;
+        var hi = s.Length;
+        while (lo < hi)
+        {
+            var mid = (lo + hi + 1) / 2;
+            if (Encoding.UTF8.GetByteCount(s[..mid]) <= maxBytes) lo = mid;
+            else hi = mid - 1;
+        }
+        return s[..lo];
     }
 
     private static string FormatLine(DueItem item)

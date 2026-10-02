@@ -119,7 +119,9 @@ public class MeTests(ApiFixture fixture)
             Assert.Equal("upkeep: teste ✓", root.GetProperty("title").GetString());
             Assert.Equal("Se você recebeu, os lembretes vão funcionar.",
                 root.GetProperty("message").GetString());
-            Assert.Equal("white_check_mark", root.GetProperty("tags")[0].GetString());
+            // array de tags INTEIRO — não só [0] (tag extra entraria sem acusar)
+            var tags = root.GetProperty("tags").EnumerateArray().Select(t => t.GetString()).ToArray();
+            Assert.Equal(new[] { "white_check_mark" }, tags);
             Assert.Equal(3, root.GetProperty("priority").GetInt32());
         }
         finally
