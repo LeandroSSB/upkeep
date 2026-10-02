@@ -53,7 +53,7 @@ public class AssetTests(ApiFixture fixture)
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
         var list = await resp.Content.ReadFromJsonAsync<List<AssetResponse>>(Json, ct);
         var ids = list!.Select(x => x.Id).ToHashSet();
-        Assert.Equal(2, list.Count);
+        Assert.Equal(2, list!.Count);
         Assert.Contains(a1!.Id, ids);
         Assert.Contains(a2!.Id, ids);
     }
