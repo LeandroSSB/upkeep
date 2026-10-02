@@ -8,12 +8,15 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-upkeep}
     volumes:
-      - upkeep-pgdata:/var/lib/postgresql/data
+      # Postgres 18+: montar em /var/lib/postgresql (não mais /data) — imagem oficial
+      # recomenda ponto único p/ suportar pg_upgrade (docker-library/postgres#37).
+      - upkeep-pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-upkeep} -d ${POSTGRES_DB:-upkeep}"]
       interval: 5s
       timeout: 3s
       retries: 12
+      start_period: 10s
 
   api:
     build: .
