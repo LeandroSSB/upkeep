@@ -61,6 +61,21 @@ public class AuthTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task Refresh_corpo_malformado_400_nunca_500()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        // {} ou {"refreshToken": null}: sem validator no endpoint, o corpo chegava ao
+        // handler e HashToken(null) estourava 500
+        var vazio = await fixture.CreateClient().PostAsJsonAsync("/auth/refresh", new { }, ct);
+        Assert.Equal(HttpStatusCode.BadRequest, vazio.StatusCode);
+
+        var nulo = await fixture.CreateClient().PostAsJsonAsync("/auth/refresh",
+            new { refreshToken = (string?)null }, ct);
+        Assert.Equal(HttpStatusCode.BadRequest, nulo.StatusCode);
+        Assert.Contains("errors", await nulo.Content.ReadAsStringAsync(ct));
+    }
+
+    [Fact]
     public async Task Refresh_rotaciona_e_invalida_antigo()
     {
         var ct = TestContext.Current.CancellationToken;

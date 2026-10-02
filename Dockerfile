@@ -11,4 +11,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app .
 EXPOSE 8080
+# Não roda como root: usuário app da imagem base (ENV APP_UID=1654). API não escreve
+# em disco (Serilog Console) e escuta na 8080 (>1024) — sem necessidade de root.
+USER $APP_UID
 ENTRYPOINT ["dotnet", "Upkeep.Api.dll"]

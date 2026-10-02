@@ -77,7 +77,7 @@ public static class AuthEndpoints
             db.RefreshTokens.Add(entity);
             await db.SaveChangesAsync();
             return Results.Ok(new { accessToken = access, refreshToken = refreshRaw });
-        });
+        }).AddEndpointFilter<ValidationFilter<RefreshRequest>>();
 
         return app;
     }

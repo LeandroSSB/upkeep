@@ -142,6 +142,20 @@ public class ServiceRecordTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task Lancar_servico_sem_campo_data_400()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var assetId = await CreateAssetAsync(client, ct);
+
+        // sem o campo data: DateOnly não-nulo binda como default 0001-01-01 (não null),
+        // que passaria pela regra "não futura" — NotEqual(MinValue) é o que rejeita
+        var resp = await PostServiceAsync(client, assetId, new { custo = 100m }, ct);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        Assert.Contains("Data é obrigatória", await resp.Content.ReadAsStringAsync(ct));
+    }
+
+    [Fact]
     public async Task Servico_com_odometro_avanca_odometro_do_asset_sem_voltar()
     {
         var ct = TestContext.Current.CancellationToken;

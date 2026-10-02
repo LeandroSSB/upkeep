@@ -6,8 +6,11 @@ public sealed class CreateServiceRequestValidator : AbstractValidator<CreateServ
 {
     public CreateServiceRequestValidator()
     {
-        // tolerância de 1 dia (fuso do cliente); "não futura" de verdade
+        // Data é DateOnly não-nulo: campo ausente no JSON binda como default 0001-01-01
+        // (não null) — NotEqual(MinValue) é o que pega esse caso; 0001-01-01 também
+        // passaria pelo LessThanOrEqualTo (está no passado).
         RuleFor(x => x.Data)
+            .NotEqual(DateOnly.MinValue).WithMessage("Data é obrigatória")
             .LessThanOrEqualTo(_ => DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1))
             .WithMessage("Data não pode ser futura");
         RuleFor(x => x.Custo).GreaterThanOrEqualTo(0);

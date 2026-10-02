@@ -27,6 +27,10 @@ builder.Services.AddUpkeepDbContext(
 
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
     ?? throw new InvalidOperationException("Jwt ausente");
+// Falha rápido no boot (não no primeiro login): appsettings vem com Key vazia por padrão —
+// sem este guard a API subia e assinava tokens com chave vazia/curta.
+if (string.IsNullOrWhiteSpace(jwt.Key) || jwt.Key.Length < 32)
+    throw new InvalidOperationException("Jwt:Key ausente/curta demais (mínimo 32 chars; configure a env Jwt__Key)");
 builder.Services.AddSingleton(jwt);
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IPasswordHasher, UpkeepPasswordHasher>();

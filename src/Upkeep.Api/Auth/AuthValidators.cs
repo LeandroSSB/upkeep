@@ -23,3 +23,13 @@ public sealed class LoginRequestValidator : AbstractValidator<LoginRequest>
         RuleFor(x => x.Password).NotEmpty();
     }
 }
+
+// Sem isto, {} ou {"refreshToken": null} chegava ao handler e o HashToken(null)
+// estourava 500. Registrado automaticamente pelo AddValidatorsFromAssemblyContaining.
+public sealed class RefreshRequestValidator : AbstractValidator<RefreshRequest>
+{
+    public RefreshRequestValidator()
+    {
+        RuleFor(x => x.RefreshToken).NotEmpty();
+    }
+}
