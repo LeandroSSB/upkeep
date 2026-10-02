@@ -15,7 +15,7 @@ export function Sticker({ item, hero = false }: { item: StickerItem; hero?: bool
     <article className={`sticker sticker--${status}${hero ? " sticker--hero" : ""}`}>
       <h2 className="sticker__title">{titulo}</h2>
       {subtitulo && <p className="sticker__sub">{subtitulo}</p>}
-      {destaque && <p className={hero ? "sticker__display" : "sticker__due"}>{destaque}</p>}
+      {destaque && <p className={hero ? "display-xl sticker__display" : "sticker__due"}>{destaque}</p>}
     </article>
   );
 }

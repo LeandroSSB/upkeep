@@ -157,8 +157,13 @@ h2 {
   transform-origin: center;
   padding: 18px 20px 18px 26px;
 }
+/* display-xl em contexto de sticker: só o respiro (tipografia vem de .display-xl) */
 .sticker__display {
   margin-top: 8px;
+}
+
+/* display-xl: o número grande (herói da Home, total dos Relatórios) */
+.display-xl {
   font-family: "Saira Condensed", system-ui, sans-serif;
   font-weight: 700;
   font-size: 40px;
@@ -238,11 +243,12 @@ h2 {
   margin-top: 8px;
 }
 
-/* toast: aviso de sucesso, rodapé central, some sozinho (sem animação) */
+/* toast: aviso de sucesso, rodapé central, some sozinho (sem animação).
+   Sobra a tabbar (telas Home/Relatórios/Ajustes); nas demais só fica um pouco alto. */
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(28px + env(safe-area-inset-bottom));
+  bottom: calc(76px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 20;
   padding: 12px 18px;
@@ -253,12 +259,14 @@ h2 {
   font-weight: 500;
 }
 
-/* ---- tabbar (placeholder de estilo; componente nas tasks de telas) ---- */
+/* ---- tabbar: navegação inferior das telas "de bolso" ---- */
 .tabbar {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
+  width: 100%;
+  max-width: 640px; /* mesma coluna da shell — não estica no desktop */
   display: flex;
   justify-content: space-around;
   background: var(--card);
@@ -274,6 +282,10 @@ h2 {
   font-size: 12px;
   color: var(--ink-soft);
   text-decoration: none;
+}
+/* item ativo: o NavLink marca com aria-current="page" */
+.tabbar a[aria-current="page"] {
+  color: var(--workshop-blue);
 }
 
 /* ---- Login: alternância entrar/criar + erros ---- */
@@ -399,11 +411,11 @@ h2 {
 .count-dot--on.count-dot--vence_em_breve { background: var(--tag-amber); }
 .count-dot--on.count-dot--ok { background: var(--tag-green); }
 
-/* ---- FAB: cadastrar ativo, fixo no canto ---- */
+/* ---- FAB: cadastrar ativo, fixo no canto (acima da tabbar da Home) ---- */
 .fab {
   position: fixed;
   right: 18px;
-  bottom: calc(18px + env(safe-area-inset-bottom));
+  bottom: calc(76px + env(safe-area-inset-bottom));
   z-index: 10;
   display: grid;
   place-items: center;
@@ -599,6 +611,89 @@ h2 {
 }
 .wo-actions .btn {
   flex: 1;
+}
+
+/* ---- Relatórios: filtros de período/ativo ---- */
+.report-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  margin-top: 16px;
+}
+/* nomes de ativo são longos: o select ganha linha própria */
+.report-filters__asset {
+  flex: 1 1 100%;
+}
+
+/* total do período: display-xl com respiro próprio */
+.report-total {
+  margin-bottom: 8px;
+}
+
+/* ---- Relatórios: barras horizontais de custo por ativo ---- */
+.bar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bar-row {
+  padding: 10px 2px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.bar-row__top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.bar-row__nome {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.bar-row__qtd {
+  flex: none;
+  font-size: 14px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.bar-row__valor {
+  flex: none;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 14px;
+  white-space: nowrap;
+}
+/* trilho + preenchimento: largura % do maior total da lista */
+.bar-row__track {
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 4px;
+  background: var(--line);
+  overflow: hidden;
+}
+.bar-row__fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--workshop-blue);
+}
+
+/* ---- Ajustes: link do tópico ntfy + microcopy ---- */
+.settings-topic {
+  display: grid;
+  gap: 2px;
+  margin: -6px 0 16px; /* cola no campo do tópico */
+  font-size: 14px;
+}
+.settings-topic__hint {
+  color: var(--ink-soft);
+}
+/* separação dos perigosos: sair da conta */
+.settings-footer {
+  display: flex;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
 /* ---- acessibilidade ---- */

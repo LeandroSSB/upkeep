@@ -35,3 +35,19 @@ export async function register(email: string, password: string): Promise<User> {
   setSession(res.accessToken, res.refreshToken);
   return res.user;
 }
+
+/** GET /me — dados da conta (tela de Ajustes). */
+export async function getMe(): Promise<Me> {
+  return apiFetch<Me>("/me");
+}
+
+/**
+ * PUT /me/ntfy-topic. String vazia/whitespace LIMPA o tópico (operação válida);
+ * o servidor trim e valida [a-zA-Z0-9_-]{1,64}. Devolve o /me atualizado.
+ */
+export async function updateNtfyTopic(ntfyTopic: string): Promise<Me> {
+  return apiFetch<Me>("/me/ntfy-topic", {
+    method: "PUT",
+    body: JSON.stringify({ ntfyTopic }),
+  });
+}
