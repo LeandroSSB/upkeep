@@ -142,6 +142,20 @@ public class ServiceRecordTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task Hoje_mais_1_dia_aceito_em_servico()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var assetId = await CreateAssetAsync(client, ct);
+
+        // boundary da tolerância de fuso: hoje+1 ainda aceito (hoje+2 já é 400, teste acima)
+        var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+        var resp = await PostServiceAsync(client, assetId,
+            new { data = hoje.AddDays(1), custo = 100m }, ct);
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Lancar_servico_sem_campo_data_400()
     {
         var ct = TestContext.Current.CancellationToken;

@@ -201,6 +201,20 @@ public class TemplateTests(ApiFixture fixture)
     }
 
     [Fact]
+    public async Task Baseline_odometro_zero_sem_intervalo_km_400()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var assetId = await CreateAssetAsync(client, ct);
+
+        // 0 É valor presente: binda como int? não-nulo → o guard HasValue deve rejeitar
+        // (diferente de omitir o campo, que binda null e seria aceito)
+        var cria = await client.PostAsJsonAsync($"/assets/{assetId}/templates",
+            new { titulo = "Só meses com odo zero", intervaloMeses = 6, baselineOdometro = 0 }, ct);
+        Assert.Equal(HttpStatusCode.BadRequest, cria.StatusCode);
+    }
+
+    [Fact]
     public async Task Cross_user_404_em_get_post_put_delete_template()
     {
         var ct = TestContext.Current.CancellationToken;
