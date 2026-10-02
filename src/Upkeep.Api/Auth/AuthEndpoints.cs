@@ -97,6 +97,20 @@ public static class AuthEndpoints
             return Results.Ok(new { accessToken = access, refreshToken = refreshRaw });
         }).AddEndpointFilter<ValidationFilter<RefreshRequest>>();
 
+        // Rota anônima (como o refresh): quem chama pode não ter mais access válido.
+        // Sempre 200 {} — idempotente e sem vazar existência do token.
+        group.MapPost("/logout", async (RefreshRequest req, UpkeepDbContext db, ITokenService tokens) =>
+        {
+            var hash = tokens.HashToken(req.RefreshToken);
+            var stored = await db.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == hash);
+            if (stored is not null && stored.RevokedAt is null)
+            {
+                stored.RevokedAt = DateTime.UtcNow;
+                await db.SaveChangesAsync();
+            }
+            return Results.Ok(new { });
+        }).AddEndpointFilter<ValidationFilter<RefreshRequest>>();
+
         return app;
     }
 }

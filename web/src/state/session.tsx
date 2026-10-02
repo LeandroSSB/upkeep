@@ -55,6 +55,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    // Revoga o refresh no servidor ANTES de limpar (fire-and-forget: falha é
+    // ignorada — offline/já revogado, o token local morre de qualquer jeito).
+    // Lê do localStorage: mesma fonte de verdade do rotate (outra aba pode ter
+    // rotacionado depois que este módulo carregou).
+    const current = localStorage.getItem(REFRESH_KEY);
+    if (current)
+      void apiFetch("/auth/logout", {
+        method: "POST",
+        auth: false,
+        body: JSON.stringify({ refreshToken: current }),
+      }).catch(() => {});
     setSession(null, null);
     setUser(null);
   };
