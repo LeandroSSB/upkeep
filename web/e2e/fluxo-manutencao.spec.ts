@@ -57,8 +57,10 @@ test("manutenção por km vence com o odômetro e volta ao ok após serviço", a
   await expect(page.getByText("62.000 km").first()).toBeVisible();
   await expect(page.getByText("R$ 350,50").first()).toBeVisible();
 
-  // relatório por ativo mostra o valor
+  // relatório por ativo mostra o valor (linha da barra do ativo; o <option>
+  // escondido do filtro também tem o nome — por isso o escopo .bar-row)
   await page.goto("/relatorios");
-  await expect(page.getByText("Fusca e2e").first()).toBeVisible();
-  await expect(page.getByText("R$ 350,50").first()).toBeVisible();
+  const linha = page.locator(".bar-row", { hasText: "Fusca e2e" });
+  await expect(linha).toBeVisible();
+  await expect(linha.getByText("R$ 350,50")).toBeVisible();
 });

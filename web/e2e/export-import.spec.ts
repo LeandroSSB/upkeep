@@ -26,7 +26,8 @@ test("export baixa JSON íntegro e import do mesmo arquivo dobra as contagens", 
   const backup = JSON.parse(texto) as { assets: unknown[] };
   expect(backup.assets.length).toBeGreaterThanOrEqual(1);
 
-  // import do mesmo arquivo → preview → confirm → contagens dobradas no toast
+  // import do mesmo arquivo → preview → confirm → toast com o que veio do arquivo
+  // (import é ADITIVO: as contagens do arquivo entram por cima das atuais)
   await page.setInputFiles('input[type="file"]', {
     name: download.suggestedFilename(),
     mimeType: "application/json",
@@ -34,5 +35,9 @@ test("export baixa JSON íntegro e import do mesmo arquivo dobra as contagens", 
   });
   await expect(page.getByText("Isso ADICIONA 1 ativo")).toBeVisible();
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
-  await expect(page.getByText("2 ativos, 0 manutenções, 0 serviços importados")).toBeVisible();
+  await expect(page.getByText("1 ativo, 0 manutenções, 0 serviços importados")).toBeVisible();
+
+  // ... e os dados DOBRAM na conta: a home lista o ativo 2x (original + cópia)
+  await page.goto("/");
+  await expect(page.locator(".asset-row__nome", { hasText: "Geladeira e2e" })).toHaveCount(2);
 });
