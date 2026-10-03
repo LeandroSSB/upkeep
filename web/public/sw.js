@@ -4,7 +4,7 @@
 //
 // bumpar VERSION a cada release (assets com hash antigo acumulam até aqui) —
 // o activate apaga os caches de toda versão anterior.
-const VERSION = "upkeep-v4";
+const VERSION = "upkeep-v5";
 // "/" fica DE FORA do precache (peso morto): o fallback offline e o re-cache
 // das navegações usam "/index.html" — nada no fetch handler pede "/".
 const SHELL = ["/index.html", "/favicon.svg", "/manifest.webmanifest"];
