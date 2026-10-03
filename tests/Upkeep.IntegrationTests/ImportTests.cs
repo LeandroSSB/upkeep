@@ -127,6 +127,13 @@ public class ImportTests(ApiFixture fixture)
     [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"2026-01-10","custo":-5}]}]}""", "Asset 0")]
     [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"ontem","custo":10}]}]}""", "Asset 0")]
     [InlineData("""{"assets":[{"nome":"Ok","tipo":"casa"},{"nome":"X","tipo":"barco"}]}""", "Asset 1")]
+    // paridade de validação com os creates da API (carry-fix do review do T1)
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","templates":[{"titulo":"T","intervaloKm":5000,"custoEstimado":-10}]}]}""", "Asset 0")]
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","templates":[{"titulo":"T"}]}]}""", "Asset 0")] // sem intervalos
+    [InlineData("""{"assets":[{"nome":"  ","tipo":"casa"}]}""", "Asset 0")] // nome só espaços
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"0001-01-01","custo":10}]}]}""", "Asset 0")]
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"2999-01-01","custo":10}]}]}""", "Asset 0")]
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"2026-01-10","odometro":-100}]}]}""", "Asset 0")]
     public async Task Import_valida_essenciais_por_asset_com_indice(string payload, string fragmento)
     {
         var ct = TestContext.Current.CancellationToken;
@@ -138,6 +145,29 @@ public class ImportTests(ApiFixture fixture)
         var problem = await resp.Content.ReadFromJsonAsync<ProblemBody>(Json, ct);
         Assert.StartsWith(fragmento, problem!.Title); // "Asset {i}: {motivo}"
         // nada importado quando qualquer asset viola o essencial
+        var lista = await (await client.GetAsync("/assets", ct))
+            .Content.ReadFromJsonAsync<List<AssetResponse>>(Json, ct);
+        Assert.Empty(lista!);
+    }
+
+    [Fact]
+    public async Task Import_strings_acima_do_length_de_coluna_400_e_nao_500()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        // notas 5000 > HasMaxLength(2000): sem a checagem de paridade, o
+        // SaveChanges estouraria a coluna e devolveria 500 opaco
+        var payload = JsonSerializer.Serialize(new
+        {
+            assets = new[] { new { nome = "Textão", tipo = "casa", notas = new string('x', 5000) } }
+        }, Json);
+
+        var resp = await PostImportAsync(client, payload, ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        var problem = await resp.Content.ReadFromJsonAsync<ProblemBody>(Json, ct);
+        Assert.StartsWith("Asset 0:", problem!.Title);
+        Assert.Contains("2000", problem.Title);
         var lista = await (await client.GetAsync("/assets", ct))
             .Content.ReadFromJsonAsync<List<AssetResponse>>(Json, ct);
         Assert.Empty(lista!);

@@ -13,6 +13,12 @@ public static class ImportEndpoints
     /// <summary>Proteção de abuse: arquivos distróicos não chegam ao banco.</summary>
     private const int MaxAssets = 200;
 
+    // Espelham os HasMaxLength do UpkeepDbContext — violar aqui seria 500 do
+    // banco, não 400 (validação de paridade com os creates da API).
+    private const int MaxNome = 200;
+    private const int MaxCategoria = 64;
+    private const int MaxNotas = 2000;
+
     private static readonly JsonSerializerOptions WebJson = new(JsonSerializerDefaults.Web);
 
     public static IEndpointRouteBuilder MapImportEndpoints(this IEndpointRouteBuilder app)
@@ -83,10 +89,39 @@ public static class ImportEndpoints
                 return AssetInvalido(i,
                     $"tipo '{asset.Tipo ?? "ausente"}' inválido (use 'veiculo', 'casa' ou 'aparelho')");
 
+            // paridade com os validadores de create (só alcançável com arquivo
+            // forjado, mas o import não pode persistir o que o POST normal
+            // recusaria, nem estourar length de coluna — que seria 500 opaco)
+            if (string.IsNullOrWhiteSpace(asset.Nome))
+                return AssetInvalido(i, "nome é obrigatório (sem apenas espaços)");
+            if (asset.Nome.Length > MaxNome)
+                return AssetInvalido(i, $"nome não pode passar de {MaxNome} caracteres ({asset.Nome.Length})");
+            if (asset.Notas?.Length > MaxNotas)
+                return AssetInvalido(i, $"notas não pode passar de {MaxNotas} caracteres ({asset.Notas.Length})");
+
             foreach (var (tpl, j) in (asset.Templates ?? []).Select((t, j) => (t, j)))
+            {
                 if (tpl.BaselineData is { } baseline && !DataValida(baseline))
                     return AssetInvalido(i,
                         $"templates[{j}].baselineData '{baseline}' não é uma data válida (yyyy-MM-dd)");
+                if (string.IsNullOrWhiteSpace(tpl.Titulo))
+                    return AssetInvalido(i, $"templates[{j}].titulo é obrigatório (sem apenas espaços)");
+                if (tpl.Titulo.Length > MaxNome)
+                    return AssetInvalido(i,
+                        $"templates[{j}].titulo não pode passar de {MaxNome} caracteres ({tpl.Titulo.Length})");
+                if (tpl.Categoria?.Length > MaxCategoria)
+                    return AssetInvalido(i,
+                        $"templates[{j}].categoria não pode passar de {MaxCategoria} caracteres ({tpl.Categoria.Length})");
+                if (tpl.IntervaloKm is <= 0)
+                    return AssetInvalido(i, $"templates[{j}].intervaloKm deve ser maior que zero ({tpl.IntervaloKm})");
+                if (tpl.IntervaloMeses is <= 0)
+                    return AssetInvalido(i, $"templates[{j}].intervaloMeses deve ser maior que zero ({tpl.IntervaloMeses})");
+                if (tpl.IntervaloKm is null && tpl.IntervaloMeses is null)
+                    return AssetInvalido(i, $"templates[{j}]: informe intervaloKm e/ou intervaloMeses");
+                if (tpl.CustoEstimado is < 0)
+                    return AssetInvalido(i,
+                        $"templates[{j}].custoEstimado não pode ser negativo ({tpl.CustoEstimado})");
+            }
 
             var datasServicos = new DateOnly?[asset.Services?.Count ?? 0];
             foreach (var (svc, j) in (asset.Services ?? []).Select((s, j) => (s, j)))
@@ -95,9 +130,19 @@ public static class ImportEndpoints
                         CultureInfo.InvariantCulture, DateTimeStyles.None, out var data))
                     return AssetInvalido(i,
                         $"services[{j}].data '{svc.Data ?? "ausente"}' inválida (yyyy-MM-dd)");
+                if (data == DateOnly.MinValue) // sentinel do bind: campo ausente no DTO não-nulo
+                    return AssetInvalido(i, $"services[{j}].data é obrigatória (não pode ser 0001-01-01)");
+                if (data > hoje.AddDays(1)) // mesma régua do validador de create (hoje+1)
+                    return AssetInvalido(i,
+                        $"services[{j}].data '{data.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}' não pode ser futura");
                 datasServicos[j] = data;
                 if (svc.Custo is < 0)
                     return AssetInvalido(i, $"services[{j}].custo não pode ser negativo ({svc.Custo})");
+                if (svc.Odometro is < 0)
+                    return AssetInvalido(i, $"services[{j}].odometro não pode ser negativo ({svc.Odometro})");
+                if (svc.Notas?.Length > MaxNotas)
+                    return AssetInvalido(i,
+                        $"services[{j}].notas não pode passar de {MaxNotas} caracteres ({svc.Notas.Length})");
             }
 
             // importação propriamente: ids NOVOS, dono é o usuário ATUAL (CreatedAt = agora)
