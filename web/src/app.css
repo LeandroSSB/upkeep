@@ -409,13 +409,14 @@ h2 {
 .tag--vence_em_breve .gauge__fill { background: var(--tag-amber); }
 
 /* ---- mostrador aceso (herói da Home) ---- */
-/* Chanfro por gradiente (idem plaqueta) para o glow do drop-shadow respirar. */
+/* Chanfro por gradiente (idem plaqueta) para o glow do drop-shadow respirar;
+   o glow em si vive no token --panel-glow (difere por tema). */
 .panel {
   margin: 10px 0 16px;
   padding: 16px 18px 18px;
   background: linear-gradient(225deg, transparent 22px, var(--panel) 22px);
   color: var(--panel-ink);
-  filter: drop-shadow(0 10px 24px rgba(9, 58, 56, 0.35));
+  filter: var(--panel-glow);
 }
 .panel__eyebrow {
   font-size: 11px;
