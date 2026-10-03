@@ -98,6 +98,8 @@ public static class ImportEndpoints
                 return AssetInvalido(i, $"nome não pode passar de {MaxNome} caracteres ({asset.Nome.Length})");
             if (asset.Notas?.Length > MaxNotas)
                 return AssetInvalido(i, $"notas não pode passar de {MaxNotas} caracteres ({asset.Notas.Length})");
+            if (asset.OdometroAtual is < 0)
+                return AssetInvalido(i, $"odometroAtual não pode ser negativo ({asset.OdometroAtual})");
 
             foreach (var (tpl, j) in (asset.Templates ?? []).Select((t, j) => (t, j)))
             {
@@ -121,6 +123,12 @@ public static class ImportEndpoints
                 if (tpl.CustoEstimado is < 0)
                     return AssetInvalido(i,
                         $"templates[{j}].custoEstimado não pode ser negativo ({tpl.CustoEstimado})");
+                if (tpl.BaselineOdometro is < 0)
+                    return AssetInvalido(i,
+                        $"templates[{j}].baselineOdometro não pode ser negativo ({tpl.BaselineOdometro})");
+                if (tpl.BaselineOdometro is not null && tpl.IntervaloKm is null)
+                    return AssetInvalido(i,
+                        $"templates[{j}].baselineOdometro só é permitido quando intervaloKm é informado");
             }
 
             var datasServicos = new DateOnly?[asset.Services?.Count ?? 0];
@@ -140,6 +148,8 @@ public static class ImportEndpoints
                     return AssetInvalido(i, $"services[{j}].custo não pode ser negativo ({svc.Custo})");
                 if (svc.Odometro is < 0)
                     return AssetInvalido(i, $"services[{j}].odometro não pode ser negativo ({svc.Odometro})");
+                if (svc.Odometro is not null && tipo != AssetTipo.Veiculo)
+                    return AssetInvalido(i, $"services[{j}].odometro só é permitido para veículos");
                 if (svc.Notas?.Length > MaxNotas)
                     return AssetInvalido(i,
                         $"services[{j}].notas não pode passar de {MaxNotas} caracteres ({svc.Notas.Length})");

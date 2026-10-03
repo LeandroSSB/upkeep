@@ -134,6 +134,11 @@ public class ImportTests(ApiFixture fixture)
     [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"0001-01-01","custo":10}]}]}""", "Asset 0")]
     [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"2999-01-01","custo":10}]}]}""", "Asset 0")]
     [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"2026-01-10","odometro":-100}]}]}""", "Asset 0")]
+    // paridade total (regras de baseline/odômetro/veículo dos creates de asset/template/serviço)
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","odometroAtual":-1}]}""", "Asset 0")]
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","templates":[{"titulo":"T","intervaloKm":5000,"baselineOdometro":-5}]}]}""", "Asset 0")]
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","templates":[{"titulo":"T","intervaloMeses":6,"baselineOdometro":1000}]}]}""", "Asset 0")] // baseline sem intervaloKm
+    [InlineData("""{"assets":[{"nome":"X","tipo":"casa","services":[{"data":"2026-01-10","odometro":100}]}]}""", "Asset 0")] // odômetro só em veículo
     public async Task Import_valida_essenciais_por_asset_com_indice(string payload, string fragmento)
     {
         var ct = TestContext.Current.CancellationToken;
