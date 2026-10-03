@@ -13,6 +13,7 @@ concurrency:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -32,6 +33,7 @@ jobs:
   # SPA: vitest + type-check (tsc -b) + build Vite — mesmos passos do stage web do Dockerfile.
   web:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: web
@@ -51,6 +53,7 @@ jobs:
   # efêmero por run (sem volumes; down -v sempre, mesmo em falha).
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: web

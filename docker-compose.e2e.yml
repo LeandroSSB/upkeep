@@ -9,6 +9,8 @@
 # volumes nomeados (pg fresco por run), creds inline (stack descartável, sem
 # .env) e rate limit de /auth alto — a suíte dispara dezenas de register/
 # refresh contra a janela fixa de 1min do limiter global.
+name: upkeep-e2e
+
 services:
   nginx:
     image: nginx:1.28-alpine
