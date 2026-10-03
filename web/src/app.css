@@ -590,59 +590,59 @@ h2 {
 .count-cell--on.count-cell--vence_em_breve { background: var(--tag-amber); border-color: var(--tag-amber); }
 .count-cell--on.count-cell--ok { background: var(--tag-green); border-color: var(--tag-green); }
 
-/* ---- Ativo: a ordem de serviço (plaqueta grande) ---- */
+/* ---- Ativo: a folha de rosto (verbete grande) ---- */
 .workorder {
   margin-top: 16px;
-  padding: 16px 18px 18px;
-  background: linear-gradient(225deg, transparent 22px, var(--card) 22px);
-  filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
+  padding: 18px 20px 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
 }
 .workorder__meta {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-soft);
 }
 .workorder__nome {
   margin-top: 6px;
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-weight: 700;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
   font-size: 30px;
-  line-height: 1.05;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-wrap: pretty;
 }
 .workorder__notas {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 14px;
   color: var(--ink-soft);
 }
-/* km do veículo: o "drum" do odômetro — chip escuro aceso, separado por hairline
-   pontilhado (cara de OS) */
+/* km do veículo: gravado na capa — chip espresso em mono, separado por
+   hairline pontilhado (a linha de preenchimento do caderno) */
 .workorder__km {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 8px 12px;
-  margin-top: 14px;
+  margin-top: 16px;
   padding-top: 12px;
   border-top: 1px dashed var(--line);
 }
 .workorder__odo {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-weight: 500;
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1.1;
   background: var(--panel);
   color: var(--panel-ink);
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 6px;
 }
 .workorder__odo--empty {
   background: none;
   color: var(--ink-soft);
-  font-family: "Barlow", system-ui, sans-serif;
+  font-family: "Public Sans", system-ui, sans-serif;
   font-weight: 400;
   font-size: 14px;
   padding: 0;
@@ -652,7 +652,7 @@ h2 {
 }
 .workorder__custo-km {
   flex-basis: 100%;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-size: 14px;
   color: var(--ink-soft);
 }
@@ -671,7 +671,7 @@ h2 {
   border-radius: 6px;
   background: var(--card);
   color: var(--ink);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
 }
 .km-form__error {
   width: 100%;
@@ -690,7 +690,7 @@ h2 {
   margin-bottom: 10px;
 }
 
-/* ---- Ativo: logbook do histórico ---- */
+/* ---- Ativo: logbook — o registro, linha a linha ---- */
 .logbook {
   list-style: none;
   margin: 0;
@@ -699,12 +699,17 @@ h2 {
 .logbook__row {
   display: grid;
   grid-template-columns: max-content 1fr max-content;
-  gap: 2px 12px;
-  padding: 10px 2px;
+  gap: 2px 14px;
+  padding: 12px 6px;
   border-bottom: 1px solid var(--line);
+  border-radius: 6px;
+  transition: background-color 150ms ease;
+}
+.logbook__row:hover {
+  background: color-mix(in srgb, var(--card) 70%, transparent);
 }
 .logbook__data {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-size: 14px;
   color: var(--ink-soft);
   white-space: nowrap;
@@ -718,7 +723,7 @@ h2 {
   font-weight: 500;
 }
 .logbook__km {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-size: 12px;
   color: var(--ink-soft);
 }
@@ -727,7 +732,7 @@ h2 {
   color: var(--ink-soft);
 }
 .logbook__custo {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-size: 14px;
   font-weight: 500;
   text-align: right;
@@ -751,9 +756,10 @@ h2 {
 .wo-confirm {
   display: grid;
   gap: 10px;
-  padding: 14px 16px;
-  background: linear-gradient(225deg, transparent 20px, var(--card) 20px);
-  filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
 .wo-confirm > p {
   margin: 0;
