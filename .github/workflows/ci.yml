@@ -63,7 +63,7 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Subir stack e2e (postgres + api + nginx)
         working-directory: .
-        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+        run: docker compose -p upkeep-e2e -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Esperar stack saudavel (api/health, timeout 120s)
@@ -73,4 +73,4 @@ jobs:
       - name: Derrubar stack e2e
         if: always()
         working-directory: .
-        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
+        run: docker compose -p upkeep-e2e -f docker-compose.yml -f docker-compose.e2e.yml down -v

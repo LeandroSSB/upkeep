@@ -1,6 +1,10 @@
 # Override E2E (CI + local): stack efêmero com a topologia REAL de produção —
 # nginx na frente publicando o SPA e /api/* (strip) na porta alta 14090.
-#   docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+#   docker compose -p upkeep-e2e -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+# ⚠ SEMPRE com -p upkeep-e2e: em hosts com o stack dev/prod do mesmo repo (ex.:
+# megalan, ~/upkeep) o projeto default "upkeep" é O MESMO do deploy vivo — sem
+# o -p o e2e recria os containers de prod. O -p dá rede/volumes/containers
+# próprios (down -v só limpa o projeto e2e).
 # Diferenças do dev/prod: nginx extra (dev não tem; prod vive no host), sem
 # volumes nomeados (pg fresco por run), creds inline (stack descartável, sem
 # .env) e rate limit de /auth alto — a suíte dispara dezenas de register/
