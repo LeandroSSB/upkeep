@@ -165,11 +165,12 @@ export default function Reports() {
 
             {/* veículo selecionado: insight de custo por km acima das barras.
              * custoPorKm só vem não-null p/ veículo do usuário; porKm null =
-             * ainda sem primeiro odômetro conhecido p/ dividir. */}
+             * kmRodados <= 0 — sem primeiro odômetro conhecido OU atual <=
+             * primeiro (rollback do odômetro). */}
             {report.custoPorKm?.porKm != null && (
               <div className="report-km">
                 <p className="eyebrow">Custo por km</p>
-                <p className="display-xl report-km__valor">
+                <p className="display-xl">
                   {formatBRL(report.custoPorKm.porKm)}/km
                 </p>
                 <p className="report-km__sub">
@@ -178,7 +179,7 @@ export default function Reports() {
               </div>
             )}
             {report.custoPorKm != null && report.custoPorKm.porKm == null && (
-              <p className="section-empty report-km-empty">Custo por km: ainda sem odômetro inicial</p>
+              <p className="section-empty report-km-empty">Custo por km: sem histórico de odômetro suficiente</p>
             )}
 
             {view === "asset" ? (

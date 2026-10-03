@@ -16,7 +16,10 @@ test("escuro/claro/automático alternam o data-theme do html", async ({ page }) 
   await page.getByRole("button", { name: "Claro", exact: true }).click();
   await expect(html).toHaveAttribute("data-theme", "light");
 
-  // automático: atributo removido (o SO decide via media query)
+  // automático: atributo removido (o SO decide via media query). poll em vez
+  // de evaluate one-shot: o React pode aplicar o delete um tick depois do click.
   await page.getByRole("button", { name: "Automático", exact: true }).click();
-  expect(await page.evaluate(() => document.documentElement.dataset.theme ?? null)).toBeNull();
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.dataset.theme ?? null))
+    .toBeNull();
 });

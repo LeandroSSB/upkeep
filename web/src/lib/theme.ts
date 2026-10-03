@@ -39,13 +39,37 @@ export function applyTheme(pref: ThemePref): void {
   if (pref === "auto") delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = pref;
 
-  document
-    .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", THEME_COLORS[resolveTheme(pref)]);
+  setMetaThemeColor(resolveTheme(pref));
 
   try {
     localStorage.setItem(STORAGE_KEY, pref);
   } catch {
     // storage cheio/bloqueado (modo privado): o tema aplica, só não persiste
   }
+}
+
+function setMetaThemeColor(resolved: "light" | "dark"): void {
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", THEME_COLORS[resolved]);
+}
+
+// "auto" AO VIVO: o @media do tokens.css troca as cores na hora quando o SO
+// muda (ex.: anoitecer no Android), mas o meta theme-color ficaria congelado
+// no tema resolvido no boot. Este watcher (chamado 1x no main.tsx) escuta o
+// SO e re-resolve o meta a cada troca — SEMPRE que a pref atual for "auto";
+// pref explícita → o SO não manda nada e o handler é no-op. Devolve o disposer.
+export function watchSystemTheme(onChange?: () => void): () => void {
+  if (typeof window.matchMedia !== "function") return () => {};
+
+  const mql = window.matchMedia("(prefers-color-scheme: dark)");
+  if (typeof mql.addEventListener !== "function") return () => {};
+
+  const onSystemChange = () => {
+    if (readThemePref() !== "auto") return;
+    setMetaThemeColor(resolveTheme("auto"));
+    onChange?.();
+  };
+  mql.addEventListener("change", onSystemChange);
+  return () => mql.removeEventListener("change", onSystemChange);
 }

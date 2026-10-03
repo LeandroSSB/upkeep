@@ -14,6 +14,7 @@ import "./tokens.css";
 import "./app.css";
 import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { watchSystemTheme } from "./lib/theme";
 import { SessionProvider } from "./state/session";
 import { registerServiceWorker } from "./sw-register";
 
@@ -32,3 +33,7 @@ createRoot(document.getElementById("root")!).render(
 // PWA: registra o SW só em produção (dentro do módulo há o gate duplo
 // import.meta.env.PROD + 'serviceWorker' in navigator).
 registerServiceWorker();
+
+// Tema "auto" ao vivo: o SO trocar de tema re-resolve o meta theme-color
+// (as cores em si já acompanham via @media do tokens.css). Vive a app toda.
+watchSystemTheme();

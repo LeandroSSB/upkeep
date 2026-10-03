@@ -1,19 +1,24 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { applyTheme, isThemePref, readThemePref, resolveTheme } from "./theme";
+import { applyTheme, isThemePref, readThemePref, resolveTheme, watchSystemTheme } from "./theme";
 
 // jsdom não implementa matchMedia — stub com o .matches controlável por teste
-// (resolveTheme("auto") é o único caminho que o consulta).
+// (resolveTheme("auto") consulta; watchSystemTheme registra "change" listeners,
+// que os testes disparam manualmente).
 let prefersDark = false;
+let mqlListeners: Array<() => void> = [];
 beforeEach(() => {
   prefersDark = false;
+  mqlListeners = [];
   vi.stubGlobal(
     "matchMedia",
     vi.fn((query: string) => ({
       matches: query.includes("dark") && prefersDark,
       media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {},
+      addEventListener: (_type: string, fn: () => void) => mqlListeners.push(fn),
+      removeEventListener: (_type: string, fn: () => void) => {
+        mqlListeners = mqlListeners.filter((l) => l !== fn);
+      },
       addListener: () => {},
       removeListener: () => {},
     })),
@@ -95,5 +100,56 @@ describe("applyTheme", () => {
     applyTheme("auto");
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
     expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#14171A");
+  });
+});
+
+describe("watchSystemTheme", () => {
+  const metaContent = () =>
+    document.querySelector('meta[name="theme-color"]')?.getAttribute("content");
+  const fireSystemChange = () => mqlListeners.forEach((l) => l());
+
+  it("pref auto: troca do SO re-resolve o meta (claro→escuro→claro) e chama onChange", () => {
+    const onChange = vi.fn();
+    const stop = watchSystemTheme(onChange);
+
+    prefersDark = true; // anoiteceu
+    fireSystemChange();
+    expect(metaContent()).toBe("#14171A");
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    prefersDark = false; // amanheceu
+    fireSystemChange();
+    expect(metaContent()).toBe("#F4F5F1");
+    expect(onChange).toHaveBeenCalledTimes(2);
+
+    stop();
+  });
+
+  it("pref explícita: troca do SO é no-op (meta intocado, onChange não roda)", () => {
+    applyTheme("dark"); // meta travado em #14171A pela escolha do usuário
+    const before = metaContent();
+    const onChange = vi.fn();
+    const stop = watchSystemTheme(onChange);
+
+    prefersDark = false;
+    fireSystemChange();
+    expect(metaContent()).toBe(before);
+    expect(onChange).not.toHaveBeenCalled();
+
+    stop();
+  });
+
+  it("disposer remove o listener", () => {
+    const stop = watchSystemTheme();
+    expect(mqlListeners).toHaveLength(1);
+    stop();
+    expect(mqlListeners).toHaveLength(0);
+  });
+
+  it("sem matchMedia (SSR/jsdom cru): não explode e devolve no-op", () => {
+    const realMatchMedia = window.matchMedia;
+    vi.stubGlobal("matchMedia", undefined);
+    expect(() => watchSystemTheme()).not.toThrow();
+    vi.stubGlobal("matchMedia", realMatchMedia);
   });
 });
