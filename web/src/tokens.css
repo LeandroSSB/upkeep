@@ -47,12 +47,12 @@
   --tag-green: #57B37C;
   --accent: #6FC8C1;
   --accent-ink: #0F191C;
-  --panel: #0B1518; /* mais escuro que o card: o mostrador afunda */
+  --panel: #1B2E2A; /* mais claro e esverdeado que o card: aceso, o mostrador EMITE luz */
   --panel-ink: #E6F0EE;
   --panel-soft: #9DB8B4;
   --focus-ring: 0 0 0 3px rgba(111, 200, 193, 0.4);
   /* escuro: halo teal fraco (a retroiluminação) + sombra de profundidade */
-  --panel-glow: drop-shadow(0 0 22px rgba(111, 200, 193, 0.12)) drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
+  --panel-glow: drop-shadow(0 0 26px rgba(111, 200, 193, 0.16)) drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
   --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.55);
 }
@@ -73,11 +73,11 @@
     --tag-green: #57B37C;
     --accent: #6FC8C1;
     --accent-ink: #0F191C;
-    --panel: #0B1518;
+    --panel: #1B2E2A; /* aceso: emite luz (mais claro que o card) */
     --panel-ink: #E6F0EE;
     --panel-soft: #9DB8B4;
     --focus-ring: 0 0 0 3px rgba(111, 200, 193, 0.4);
-    --panel-glow: drop-shadow(0 0 22px rgba(111, 200, 193, 0.12)) drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
+    --panel-glow: drop-shadow(0 0 26px rgba(111, 200, 193, 0.16)) drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
     --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
     --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.55);
   }
