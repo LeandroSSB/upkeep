@@ -1,6 +1,6 @@
 // Gera os PNGs do PWA (192/512, "any" e maskable) a partir do favicon.svg v2
 // (plaqueta chanfrada — régua + "U" como path, sem <text>: determinístico em
-// qualquer host, mesmo sem fontes). Rodar no megalan (sharp é devDep e NUNCA
+// qualquer host, mesmo sem fontes). Rodar no servidor/CI (sharp é devDep e NUNCA
 // vai para o bundle):
 //   docker run --rm -v ~/upkeep/web:/src -w /src -v upkeep-npm-cache:/root/.npm \
 //     node:22-alpine sh -c "npm ci && node scripts/gen-icons.mjs"
