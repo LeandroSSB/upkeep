@@ -361,7 +361,7 @@ h2 {
   }
 }
 
-/* ---- plaqueta (sticker v2): chanfro + régua ---- */
+/* ---- plaqueta: chanfro + régua ---- */
 .tag {
   margin-bottom: 10px;
   padding: 12px 14px 14px;
@@ -470,7 +470,7 @@ h2 {
   flex: none;
   width: 18px;
   height: 18px;
-  accent-color: var(--workshop-blue);
+  accent-color: var(--accent);
 }
 
 /* ---- Home: lista ATIVOS — linha simples + células de contagem ---- */

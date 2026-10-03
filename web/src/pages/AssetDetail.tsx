@@ -1,4 +1,4 @@
-// Ativo — a ordem de serviço: header com odômetro, manutenções como stickers e o
+// Ativo — a ordem de serviço: header com odômetro, manutenções como plaquetas e o
 // logbook de serviços. Formulários (template/serviço/editar) chegam na Task 5 —
 // as rotas já existem como placeholder.
 import { useEffect, useState } from "react";
@@ -66,7 +66,7 @@ export default function AssetDetail() {
     };
   }, [id, attempt]);
 
-  // km andou → status/kmRemaining dos stickers mudam no servidor; só rebusca os templates.
+  // km andou → status/kmRemaining das plaquetas mudam no servidor; só rebusca os templates.
   function onOdometerSaved(km: number) {
     if (!id) return;
     setPhase((p) => (p.kind === "ready" ? { ...p, asset: { ...p.asset, odometroAtual: km } } : p));
@@ -74,7 +74,7 @@ export default function AssetDetail() {
       .then((templates) => {
         setPhase((p) => (p.kind === "ready" ? { ...p, templates } : p));
       })
-      .catch(() => {} // falha aqui não derruba a tela: os stickers ficam como estão
+      .catch(() => {} // falha aqui não derruba a tela: as plaquetas ficam como estão
       );
   }
 

@@ -1,5 +1,5 @@
 // A fração da régua: quanto do intervalo já foi consumido (0..1). É o dado por
-// trás do "mostrador" (gauge) dos stickers — posição do ponteiro, não só a cor.
+// trás do "mostrador" (gauge) das plaquetas — posição do ponteiro, não só a cor.
 const DAY_MS = 86_400_000;
 
 /** O que o gauge precisa de um template (AssetTemplate satisfaz). */
