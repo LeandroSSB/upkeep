@@ -31,8 +31,6 @@
   /* SOMENTE flutuantes (toast/update-bar/FAB) — profundidade vem da cor, v3
      não tem --shadow-1 (lição do órfão v2) */
   --shadow-2: 0 8px 30px rgba(43, 33, 23, 0.16);
-  /* LEGADO v2 (o .panel antigo lê até a Task 2 substituí-lo): */
-  --panel-glow: drop-shadow(0 10px 24px rgba(43, 33, 23, 0.3));
 }
 
 /* Escuro explícito (toggle "Escuro"). */
@@ -55,7 +53,6 @@
   --panel-soft: #B4A88F;
   --focus-ring: 0 0 0 3px rgba(199, 162, 230, 0.4);
   --shadow-2: 0 8px 30px rgba(0, 0, 0, 0.55);
-  --panel-glow: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
 }
 
 /* Escuro pelo SO ("Automático"): vale a menos que o usuário tenha travado
@@ -80,7 +77,6 @@
     --panel-soft: #B4A88F;
     --focus-ring: 0 0 0 3px rgba(199, 162, 230, 0.4);
     --shadow-2: 0 8px 30px rgba(0, 0, 0, 0.55);
-    --panel-glow: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
   }
 }
 

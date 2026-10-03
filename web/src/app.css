@@ -360,61 +360,108 @@ h2 {
   }
 }
 
-/* ---- plaqueta: chanfro (gradiente de canto) + régua ---- */
+/* ---- o carimbo: a assinatura v3 — status vira selo de tinta ---- */
+.stamp {
+  display: inline-block;
+  flex: none;
+  padding: 3px 9px 2px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  color: var(--ink);
+  transform: rotate(-2deg);
+  /* segunda passada desalinhada: tinta de carimbo real nunca cai reta */
+  text-shadow: 0.5px 0.4px 0 color-mix(in srgb, currentColor 45%, transparent);
+}
+.stamp--vencido { color: var(--tag-red); }
+.stamp--vence_em_breve { color: var(--tag-amber); }
+.stamp--ok { color: var(--tag-green); }
+
+/* ---- verbete (sticker v3): entrada do caderno, borda hairline ---- */
 .tag {
   margin-bottom: 10px;
-  padding: 12px 14px 14px;
-  background: linear-gradient(225deg, transparent 20px, var(--card) 20px);
-  filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
+  padding: 14px 16px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.tag__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
 }
 .tag__title {
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 21px;
-  line-height: 1.1;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .tag__sub {
-  margin-top: 1px;
+  margin-top: 2px;
   font-size: 14px;
   color: var(--ink-soft);
 }
 .tag__due {
   margin-top: 8px;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-size: 14px;
   color: var(--ink-soft);
 }
 .tag--vencido .tag__due { color: var(--tag-red); font-weight: 500; }
 .tag--vence_em_breve .tag__due { color: var(--tag-amber); }
 
-/* ---- régua: a assinatura — quanto do intervalo já foi consumido ---- */
+/* ---- régua: linha de tinta — quanto do intervalo já foi consumido ---- */
 .gauge {
   margin-top: 10px;
-  height: 6px;
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  height: 4px;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
   overflow: hidden;
 }
 .gauge__fill {
   height: 100%;
-  border-radius: 3px;
   background: var(--tag-green);
   transition: width 200ms ease;
 }
 .tag--vencido .gauge__fill { background: var(--tag-red); }
 .tag--vence_em_breve .gauge__fill { background: var(--tag-amber); }
 
-/* ---- mostrador aceso (herói da Home) ---- */
-/* Chanfro por gradiente (idem plaqueta) para o glow do drop-shadow respirar;
-   o glow em si vive no token --panel-glow (difere por tema). */
+/* ---- a capa (herói da Home): o bloco escuro do caderno ---- */
 .panel {
-  margin: 10px 0 16px;
-  padding: 16px 18px 18px;
-  background: linear-gradient(225deg, transparent 22px, var(--panel) 22px);
+  position: relative; /* o carimbo atravessa a borda */
+  margin: 12px 0 18px;
+  padding: 18px 20px 20px;
+  background: var(--panel);
   color: var(--panel-ink);
-  filter: var(--panel-glow);
+  border-radius: 12px;
+}
+/* o carimbo da capa: grande, atravessando o canto, carimbando ao entrar */
+.panel .stamp {
+  position: absolute;
+  top: -12px;
+  right: 16px;
+  padding: 5px 12px 4px;
+  border-width: 2px;
+  border-radius: 4px;
+  font-size: 13px;
+  background: var(--panel); /* corta a borda da capa como um selo de verdade */
+  transform: rotate(-5deg);
+  animation: stamp-press 240ms ease-out both;
+}
+.panel .stamp--vencido { color: var(--stamp-red); }
+.panel .stamp--vence_em_breve { color: var(--stamp-amber); }
+.panel .stamp--ok { color: var(--stamp-green); }
+@keyframes stamp-press {
+  from {
+    opacity: 0;
+    transform: rotate(-5deg) scale(1.18);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-5deg) scale(1);
+  }
 }
 .panel__eyebrow {
   font-size: 11px;
@@ -425,37 +472,31 @@ h2 {
 }
 .panel__title {
   margin-top: 4px;
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-weight: 700;
   font-size: 28px;
-  line-height: 1.05;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  line-height: 1.15;
 }
 .panel__sub {
-  margin-top: 1px;
+  margin-top: 2px;
   font-size: 14px;
   color: var(--panel-soft);
 }
-/* display-xl em contexto de painel: só o respiro (tipografia da .panel__display) */
 .panel__display {
-  margin-top: 10px;
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 44px;
-  line-height: 1;
-  letter-spacing: 0.01em;
+  margin-top: 12px;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 1.05;
 }
-.panel--vencido .panel__display { color: var(--lamp-red); }
-.panel--vence_em_breve .panel__display { color: var(--lamp-amber); }
-.panel--ok .panel__display { color: var(--lamp-green); }
+.panel--vencido .panel__display { color: var(--stamp-red); }
+.panel--vence_em_breve .panel__display { color: var(--stamp-amber); }
+.panel--ok .panel__display { color: var(--stamp-green); }
 .gauge--panel {
   margin-top: 14px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.18);
 }
-.panel--vencido .gauge__fill { background: var(--lamp-red); }
-.panel--vence_em_breve .gauge__fill { background: var(--lamp-amber); }
-.panel--ok .gauge__fill { background: var(--lamp-green); }
+.panel--vencido .gauge__fill { background: var(--stamp-red); }
+.panel--vence_em_breve .gauge__fill { background: var(--stamp-amber); }
+.panel--ok .gauge__fill { background: var(--stamp-green); }
 
 /* checkbox que habilita o campo logo abaixo (intervalos por km/meses) */
 .field > label.check {
@@ -472,22 +513,26 @@ h2 {
   accent-color: var(--accent);
 }
 
-/* ---- Home: lista ATIVOS — linha simples + células de contagem ---- */
+/* ---- Home: lista ATIVOS — linha de caderno + células de contagem ---- */
 .asset-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-/* linha alinhada pela 1ª linha de texto (nome): odômetro e dots têm a altura da
-   linha (16×1.5 = 24px) e centralizam nela, não no bloco de duas linhas */
+/* linha alinhada pela 1ª linha de texto (nome) */
 .asset-row {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 2px;
+  padding: 12px 6px;
   border-bottom: 1px solid var(--line);
   color: inherit;
   text-decoration: none;
+  border-radius: 6px;
+  transition: background-color 150ms ease;
+}
+.asset-row:hover {
+  background: color-mix(in srgb, var(--card) 70%, transparent);
 }
 .asset-row__main {
   flex: 1;
@@ -505,9 +550,9 @@ h2 {
 }
 .asset-row__odo {
   flex: none;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-size: 14px;
-  line-height: 24px; /* = 1ª linha (16×1.5) */
+  line-height: 26px; /* = 1ª linha (16×1.6) */
   color: var(--ink-soft);
   white-space: nowrap;
 }
@@ -516,25 +561,25 @@ h2 {
   align-items: center;
   gap: 6px;
   flex: none;
-  height: 24px; /* = 1ª linha (16×1.5) */
+  height: 26px; /* = 1ª linha (16×1.6) */
 }
-/* contagem por status na lista de ativos: células quadradas (na régua, o
-   quadrado é a moeda; oco quando 0, preenchido com o número quando > 0) */
+/* contagem por status na lista de ativos: quadradinho oco quando 0,
+   preenchido com o número quando > 0 */
 .count-cell {
   display: inline-grid;
   place-items: center;
   width: 22px;
   height: 22px;
   border: 1.5px solid var(--line);
-  border-radius: 3px;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  border-radius: 2px;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-size: 11px;
   font-weight: 500;
   color: var(--ink-soft);
 }
-.count-cell--vencido { border-color: color-mix(in srgb, var(--tag-red) 60%, transparent); }
-.count-cell--vence_em_breve { border-color: color-mix(in srgb, var(--tag-amber) 60%, transparent); }
-.count-cell--ok { border-color: color-mix(in srgb, var(--tag-green) 60%, transparent); }
+.count-cell--vencido { border-color: color-mix(in srgb, var(--tag-red) 55%, transparent); }
+.count-cell--vence_em_breve { border-color: color-mix(in srgb, var(--tag-amber) 55%, transparent); }
+.count-cell--ok { border-color: color-mix(in srgb, var(--tag-green) 55%, transparent); }
 /* número na célula preenchida: 600/12px p/ contraste AA nas 3 fills */
 .count-cell--on {
   color: var(--card);

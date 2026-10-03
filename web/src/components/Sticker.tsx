@@ -1,5 +1,7 @@
-// A plaqueta: card chanfrado, título em condensed caps, linha do vencimento em
-// mono e — quando o intervalo é conhecido — a régua do mostrador (assinatura v2).
+// O verbete: entrada do caderno — título serifado, carimbo do status no
+// cabeçalho, linha do vencimento em mono e a régua (linha de tinta) quando o
+// intervalo é conhecido.
+import { statusLabel } from "../lib/format";
 import type { Status } from "../lib/types";
 
 export interface StickerItem {
@@ -16,7 +18,10 @@ export function Sticker({ item }: { item: StickerItem }) {
   const pct = gauge != null ? `${Math.round(gauge * 100)}%` : null;
   return (
     <article className={`tag tag--${status}`}>
-      <h2 className="tag__title">{titulo}</h2>
+      <div className="tag__head">
+        <h2 className="tag__title">{titulo}</h2>
+        <span className={`stamp stamp--${status}`}>{statusLabel(status)}</span>
+      </div>
       {subtitulo && <p className="tag__sub">{subtitulo}</p>}
       {destaque && <p className="tag__due">{destaque}</p>}
       {pct && (

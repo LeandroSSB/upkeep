@@ -1,6 +1,8 @@
-// O mostrador aceso: o mais urgente da Home vira painel escuro retroiluminado
-// — o único elemento "ligado" da prancheta. A régua e a cor da lâmpada contam
+// A ficha de capa: o mais urgente da Home vira a página escura do caderno —
+// o único bloco escuro da prancheta. O carimbo atravessa a borda superior e
+// "carimba" ao entrar (a assinatura v3); a régua e a tinta do status contam
 // o quanto do intervalo já foi consumido.
+import { statusLabel } from "../lib/format";
 import type { Status } from "../lib/types";
 
 export function HeroPanel({
@@ -19,6 +21,7 @@ export function HeroPanel({
   const pct = gauge != null ? `${Math.round(gauge * 100)}%` : null;
   return (
     <article className={`panel panel--${status}`}>
+      <span className={`stamp stamp--${status}`}>{statusLabel(status)}</span>
       <p className="panel__eyebrow">Mais urgente</p>
       <h2 className="panel__title">{titulo}</h2>
       {subtitulo && <p className="panel__sub">{subtitulo}</p>}
