@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "e2e:up": "docker compose -f ../docker-compose.yml -f ../docker-compose.e2e.yml up -d --build",
+    "e2e:down": "docker compose -f ../docker-compose.yml -f ../docker-compose.e2e.yml down -v"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",
@@ -18,8 +21,10 @@
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
+    "@types/node": "^22.10.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",

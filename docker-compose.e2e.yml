@@ -1,0 +1,33 @@
+# Override E2E (CI + local): stack efêmero com a topologia REAL de produção —
+# nginx na frente publicando o SPA e /api/* (strip) na porta alta 14090.
+#   docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+# Diferenças do dev/prod: nginx extra (dev não tem; prod vive no host), sem
+# volumes nomeados (pg fresco por run), creds inline (stack descartável, sem
+# .env) e rate limit de /auth alto — a suíte dispara dezenas de register/
+# refresh contra a janela fixa de 1min do limiter global.
+services:
+  nginx:
+    image: nginx:1.28-alpine
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:14090:80"
+    volumes:
+      - ./deploy/nginx-e2e.conf:/etc/nginx/conf.d/default.conf:ro
+
+  api:
+    # sem porta no host: só o nginx (14090) publica; a API fica na rede interna
+    ports: !override []
+    environment:
+      ConnectionStrings__Upkeep: Host=db;Database=upkeep;Username=upkeep;Password=upkeep-e2e
+      Jwt__Key: upkeep-e2e-jwt-key-fixa-64-chars-0000000000000000000000
+      Ntfy__Enabled: "false"
+      RateLimit__PermitLimit: "1000"
+
+  db:
+    # pg efêmero: down -v (e2e:down) apaga tudo
+    volumes: !override []
+    environment:
+      POSTGRES_USER: upkeep
+      POSTGRES_PASSWORD: upkeep-e2e
+      POSTGRES_DB: upkeep
