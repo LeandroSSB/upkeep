@@ -76,6 +76,8 @@ export default function Login() {
 
   return (
     <AppShell>
+      <p className="login-mark" aria-hidden="true">upkeep</p>
+      <p className="login-tagline">manutenção em dia</p>
       <h1>{isRegister ? "Criar conta" : "Entrar"}</h1>
         <p className="login-switch">
           {isRegister ? (
@@ -85,7 +87,7 @@ export default function Login() {
           )}
         </p>
 
-        <form onSubmit={onSubmit} noValidate>
+        <form className="form-card" onSubmit={onSubmit} noValidate>
           <div className="field">
             <label htmlFor="email">E-mail</label>
             <input

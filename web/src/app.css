@@ -175,6 +175,30 @@ h2 {
   margin-top: 8px;
 }
 
+/* ---- form-card: o formulário mora numa plaqueta ---- */
+.form-card {
+  padding: 16px 16px 18px;
+  margin-bottom: 16px;
+  background: var(--card);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
+}
+
+/* ---- Login: wordmark de entrada ---- */
+.login-mark {
+  margin-top: 32px;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.login-tagline {
+  margin: 2px 0 20px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
 /* toast: aviso de sucesso, rodapé central, some sozinho (sem animação). */
 .toast {
   pointer-events: none;
@@ -225,7 +249,7 @@ h2 {
 
 /* ---- Login: alternância entrar/criar + erros ---- */
 .login-switch {
-  margin: 8px 0 20px;
+  margin: 8px 0 16px;
   font-size: 14px;
   color: var(--ink-soft);
 }

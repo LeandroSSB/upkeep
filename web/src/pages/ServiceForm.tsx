@@ -165,7 +165,7 @@ function ServiceFields({ asset, templates }: { asset: Asset; templates: AssetTem
       <h1>Lançar serviço</h1>
       <p className="form-sub">{asset.nome}</p>
 
-      <form onSubmit={onSubmit} noValidate>
+      <form className="form-card" onSubmit={onSubmit} noValidate>
         <Field htmlFor="templateId" label="Manutenção (opcional)">
           <select
             id="templateId"

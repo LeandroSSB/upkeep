@@ -246,7 +246,7 @@ function TemplateFields({ asset, template }: { asset: Asset; template: AssetTemp
       <h1>{editing ? "Editar manutenção" : "Nova manutenção"}</h1>
       <p className="form-sub">{asset.nome}</p>
 
-      <form onSubmit={onSubmit} noValidate>
+      <form className="form-card" onSubmit={onSubmit} noValidate>
         <Field htmlFor="titulo" label="Título" error={errs.titulo}>
           <input
             id="titulo"

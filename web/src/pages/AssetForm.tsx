@@ -165,7 +165,7 @@ function AssetFields({ asset, assetId }: { asset: Asset | null; assetId?: string
         </p>
       )}
 
-      <form onSubmit={onSubmit} noValidate>
+      <form className="form-card" onSubmit={onSubmit} noValidate>
         <Field htmlFor="nome" label="Nome" error={errs.nome}>
           <input
             id="nome"
