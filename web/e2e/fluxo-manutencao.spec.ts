@@ -26,22 +26,22 @@ test("manutenção por km vence com o odômetro e volta ao ok após serviço", a
   await page.getByLabel("Km base (opcional)").fill("50000");
   await page.getByRole("button", { name: "Salvar manutenção" }).click();
   await expect(page.getByRole("heading", { name: "Fusca e2e" })).toBeVisible();
-  await expect(page.locator(".sticker--ok").first()).toBeVisible();
+  await expect(page.locator(".tag--ok").first()).toBeVisible();
 
   // odômetro 61.500 → estourou 1.500 km → vencido no detalhe
   await page.getByRole("button", { name: "atualizar km" }).click();
   await page.getByLabel("Odômetro atual").fill("61500");
   await page.getByRole("button", { name: "Salvar", exact: true }).click();
-  await expect(page.locator(".sticker--vencido").first()).toBeVisible();
+  await expect(page.locator(".tag--vencido").first()).toBeVisible();
   await expect(page.getByText("estourou 1.500 km")).toBeVisible();
 
   // reload mantém o vencido (status é do servidor, não de estado local)
   await page.reload();
-  await expect(page.locator(".sticker--vencido").first()).toBeVisible();
+  await expect(page.locator(".tag--vencido").first()).toBeVisible();
 
-  // ... e a home mostra o herói vencido
+  // ... e a home mostra o herói vencido (mostrador HeroPanel)
   await page.goto("/");
-  await expect(page.locator(".sticker--vencido").first()).toBeVisible();
+  await expect(page.locator(".panel--vencido").first()).toBeVisible();
 
   // serviço vinculado (odômetro 62.000, custo 350,50) reseta a baseline → ok
   await page.getByRole("link", { name: /Fusca e2e/ }).first().click();
@@ -51,7 +51,7 @@ test("manutenção por km vence com o odômetro e volta ao ok após serviço", a
   await page.getByLabel("Custo", { exact: true }).fill("350,50");
   await page.getByRole("button", { name: "Lançar serviço", exact: true }).click();
   await expect(page.getByText("Serviço lançado")).toBeVisible();
-  await expect(page.locator(".sticker--ok").first()).toBeVisible();
+  await expect(page.locator(".tag--ok").first()).toBeVisible();
 
   // histórico tem a linha do serviço
   await expect(page.getByText("62.000 km").first()).toBeVisible();

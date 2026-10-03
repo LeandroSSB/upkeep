@@ -1,5 +1,5 @@
-// A etiqueta: card branco com a barra do status à esquerda, título display e a
-// linha do vencimento. O herói é a versão grande/rotacionada — o mais urgente da Home.
+// A plaqueta: card chanfrado, título em condensed caps, linha do vencimento em
+// mono e — quando o intervalo é conhecido — a régua do mostrador (assinatura v2).
 import type { Status } from "../lib/types";
 
 export interface StickerItem {
@@ -7,15 +7,23 @@ export interface StickerItem {
   subtitulo?: string;
   status: Status;
   destaque?: string;
+  /** fração 0..1 consumida do intervalo (gaugeFraction); null/undefined = sem régua */
+  gauge?: number | null;
 }
 
-export function Sticker({ item, hero = false }: { item: StickerItem; hero?: boolean }) {
-  const { titulo, subtitulo, status, destaque } = item;
+export function Sticker({ item }: { item: StickerItem }) {
+  const { titulo, subtitulo, status, destaque, gauge } = item;
+  const pct = gauge != null ? `${Math.round(gauge * 100)}%` : null;
   return (
-    <article className={`sticker sticker--${status}${hero ? " sticker--hero" : ""}`}>
-      <h2 className="sticker__title">{titulo}</h2>
-      {subtitulo && <p className="sticker__sub">{subtitulo}</p>}
-      {destaque && <p className={hero ? "display-xl sticker__display" : "sticker__due"}>{destaque}</p>}
+    <article className={`tag tag--${status}`}>
+      <h2 className="tag__title">{titulo}</h2>
+      {subtitulo && <p className="tag__sub">{subtitulo}</p>}
+      {destaque && <p className="tag__due">{destaque}</p>}
+      {pct && (
+        <div className="gauge" aria-hidden="true">
+          <div className="gauge__fill" style={{ width: pct }} />
+        </div>
+      )}
     </article>
   );
 }

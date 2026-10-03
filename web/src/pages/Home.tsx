@@ -5,8 +5,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { listAssets, listTemplates, type Asset } from "../api/assets";
 import { ApiError } from "../api/client";
 import { AppShell } from "../components/AppShell";
+import { HeroPanel } from "../components/HeroPanel";
 import { Sticker } from "../components/Sticker";
 import { templateDestaque, todayIso, worstTemplate } from "../lib/destaque";
+import { gaugeFraction } from "../lib/gauge";
 import { formatKm, statusLabel, typeLabel } from "../lib/format";
 import type { Status } from "../lib/types";
 
@@ -35,11 +37,11 @@ function worstStatus(assets: Asset[]): Status | null {
   return assets.length > 0 ? "ok" : null;
 }
 
-/** Dot de contagem: preenchido com o número quando > 0, oco quando 0. */
-function CountDot({ status, count }: { status: Status; count: number }) {
+/** Célula de contagem: preenchida com o número quando > 0, oca quando 0. */
+function CountCell({ status, count }: { status: Status; count: number }) {
   return (
     <span
-      className={`count-dot count-dot--${status}${count > 0 ? " count-dot--on" : ""}`}
+      className={`count-cell count-cell--${status}${count > 0 ? " count-cell--on" : ""}`}
       title={count > 0 ? `${count} ${statusLabel(status)}` : `nenhum ${statusLabel(status)}`}
       aria-hidden={count > 0 ? undefined : true}
     >
@@ -83,7 +85,11 @@ export default function Home() {
   // Destaque do herói sai do pior template do asset ("estourou 1.500 km" conta a
   // história melhor que "1 vencida"). Falha/nada urgente nos templates → fallback
   // para o texto de contagem.
-  const [heroDetail, setHeroDetail] = useState<{ status: Status; destaque: string } | null>(null);
+  const [heroDetail, setHeroDetail] = useState<{
+    status: Status;
+    destaque: string;
+    gauge: number | null;
+  } | null>(null);
   useEffect(() => {
     setHeroDetail(null);
     if (!heroId) return;
@@ -94,7 +100,12 @@ export default function Home() {
         const worstTemplateItem = worstTemplate(templates);
         if (!worstTemplateItem) return;
         const destaque = templateDestaque(worstTemplateItem, todayIso());
-        if (destaque) setHeroDetail({ status: worstTemplateItem.status ?? "vencido", destaque });
+        if (destaque)
+          setHeroDetail({
+            status: worstTemplateItem.status ?? "vencido",
+            destaque,
+            gauge: gaugeFraction(worstTemplateItem, todayIso()),
+          });
       })
       .catch(() => {} // sem templates do herói: segue o texto de contagem
       );
@@ -152,24 +163,20 @@ export default function Home() {
         {phase.kind === "ready" && assets.length > 0 && (
           <>
             {hero && (
-              <>
-                <p className="eyebrow eyebrow--hero">Mais urgente</p>
-                <Link to={`/ativos/${hero.asset.id}`} className="asset-link">
-                  <Sticker
-                    hero
-                    item={{
-                      titulo: hero.asset.nome,
-                      subtitulo: typeLabel(hero.asset.tipo),
-                      status: heroDetail?.status ?? hero.status,
-                      destaque:
-                        heroDetail?.destaque ??
-                        (hero.asset.overdue > 0
-                          ? plural(hero.asset.overdue, "vencida", "vencidas")
-                          : plural(hero.asset.dueSoon, "vence em breve", "vencem em breve")),
-                    }}
-                  />
-                </Link>
-              </>
+              <Link to={`/ativos/${hero.asset.id}`} className="asset-link">
+                <HeroPanel
+                  titulo={hero.asset.nome}
+                  subtitulo={typeLabel(hero.asset.tipo)}
+                  status={heroDetail?.status ?? hero.status}
+                  destaque={
+                    heroDetail?.destaque ??
+                    (hero.asset.overdue > 0
+                      ? plural(hero.asset.overdue, "vencida", "vencidas")
+                      : plural(hero.asset.dueSoon, "vence em breve", "vencem em breve"))
+                  }
+                  gauge={heroDetail?.gauge}
+                />
+              </Link>
             )}
 
             {vencidos.length > 0 && (
@@ -220,10 +227,10 @@ export default function Home() {
                     {a.tipo === "veiculo" && a.odometroAtual != null && (
                       <span className="asset-row__odo">{formatKm(a.odometroAtual)}</span>
                     )}
-                    <span className="count-dots">
-                      <CountDot status="vencido" count={a.overdue} />
-                      <CountDot status="vence_em_breve" count={a.dueSoon} />
-                      <CountDot status="ok" count={a.ok} />
+                    <span className="count-cells">
+                      <CountCell status="vencido" count={a.overdue} />
+                      <CountCell status="vence_em_breve" count={a.dueSoon} />
+                      <CountCell status="ok" count={a.ok} />
                     </span>
                   </Link>
                 </li>
