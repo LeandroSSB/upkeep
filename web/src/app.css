@@ -522,35 +522,37 @@ h2 {
 .count-cell--on.count-cell--vence_em_breve { background: var(--tag-amber); border-color: var(--tag-amber); }
 .count-cell--on.count-cell--ok { background: var(--tag-green); border-color: var(--tag-green); }
 
-/* ---- Ativo: ordem de serviço ---- */
+/* ---- Ativo: a ordem de serviço (plaqueta grande) ---- */
 .workorder {
   margin-top: 16px;
-  padding: 16px 16px 16px 22px;
+  padding: 16px 18px 18px;
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  box-shadow: var(--shadow-1);
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+  filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
 }
 .workorder__meta {
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
 }
 .workorder__nome {
   margin-top: 6px;
-  font-family: "Saira Condensed", system-ui, sans-serif;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 700;
-  font-size: 28px;
-  line-height: 1.1;
+  font-size: 30px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 .workorder__notas {
   margin-top: 4px;
   font-size: 14px;
   color: var(--ink-soft);
 }
-/* km do veículo: mono grande, separado por hairline pontilhado (cara de OS) */
+/* km do veículo: o "drum" do odômetro — chip escuro aceso, separado por hairline
+   pontilhado (cara de OS) */
 .workorder__km {
   display: flex;
   align-items: baseline;
@@ -565,16 +567,22 @@ h2 {
   font-weight: 500;
   font-size: 28px;
   line-height: 1.1;
+  background: var(--panel);
+  color: var(--panel-ink);
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 .workorder__odo--empty {
-  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  background: none;
+  color: var(--ink-soft);
+  font-family: "Barlow", system-ui, sans-serif;
   font-weight: 400;
   font-size: 14px;
+  padding: 0;
 }
 .workorder__km-toggle {
   font-size: 14px;
 }
-/* custo por km do veículo: linha mono pequena em linha própria sob o odômetro */
 .workorder__custo-km {
   flex-basis: 100%;
   font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -592,8 +600,8 @@ h2 {
 .km-form input {
   width: 10ch;
   padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
   background: var(--card);
   color: var(--ink);
   font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -631,6 +639,7 @@ h2 {
 .logbook__data {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 14px;
+  color: var(--ink-soft);
   white-space: nowrap;
 }
 .logbook__desc {
@@ -653,6 +662,7 @@ h2 {
 .logbook__custo {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 14px;
+  font-weight: 500;
   text-align: right;
   white-space: nowrap;
 }
@@ -676,8 +686,8 @@ h2 {
   gap: 10px;
   padding: 14px 16px;
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
 }
 .wo-confirm > p {
   margin: 0;
@@ -690,7 +700,7 @@ h2 {
 }
 .btn--danger {
   background: var(--card);
-  border-color: var(--tag-red);
+  border: 1.5px solid var(--tag-red);
   color: var(--tag-red);
 }
 /* CTA principal grudada no rodapé enquanto rola o histórico */

@@ -12,6 +12,7 @@ import { Toast } from "../components/Toast";
 import { WorkOrderHeader } from "../components/WorkOrderHeader";
 import { templateDestaque, todayIso } from "../lib/destaque";
 import { formatBRL, formatDate, formatKm } from "../lib/format";
+import { gaugeFraction } from "../lib/gauge";
 
 type Phase =
   | { kind: "loading" }
@@ -139,6 +140,7 @@ export default function AssetDetail() {
                     subtitulo: t.categoria ?? undefined,
                     status: t.status ?? "ok",
                     destaque: templateDestaque(t, todayIso()) ?? undefined,
+                    gauge: gaugeFraction(t, todayIso()),
                   }}
                 />
               </Link>
