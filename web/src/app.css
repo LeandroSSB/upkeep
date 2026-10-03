@@ -798,13 +798,13 @@ h2 {
   margin-top: 16px;
   padding: 3px;
   background: var(--card);
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: 8px;
 }
 .seg__btn {
   padding: 7px 14px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 6px;
   background: none;
   color: var(--ink-soft);
   font-weight: 600;
@@ -837,10 +837,10 @@ h2 {
 .report-km {
   margin: 20px 0 8px;
   padding-top: 14px;
-  border-top: 1px dashed var(--line); /* mesmo hairline pontilhado do km da OS */
+  border-top: 1px dashed var(--line); /* a linha de preenchimento do km */
 }
 .report-km .eyebrow {
-  margin: 0 0 4px; /* eyebrow herda 24px de topo — aqui a régua já separa */
+  margin: 0 0 4px; /* eyebrow herda 28px de topo — aqui a hairline já separa */
 }
 .report-km__sub {
   margin: 4px 0 0;
@@ -851,15 +851,16 @@ h2 {
   margin-top: 12px;
 }
 
-/* ---- Relatórios: barras horizontais de custo por ativo ---- */
+/* ---- Relatórios: barras de custo — linha de tinta grossa ---- */
 .bar-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .bar-row {
-  padding: 10px 2px 12px;
+  padding: 10px 6px 12px;
   border-bottom: 1px solid var(--line);
+  border-radius: 6px;
 }
 .bar-row__top {
   display: flex;
@@ -880,22 +881,21 @@ h2 {
 }
 .bar-row__valor {
   flex: none;
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
 }
-/* trilho + preenchimento: régua grande — largura % do maior total da lista */
+/* trilho + preenchimento: mesma gramática da régua (radius 0, tinta) —
+   largura % do maior total da lista */
 .bar-row__track {
-  height: 8px;
-  margin-top: 6px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  height: 6px;
+  margin-top: 8px;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
   overflow: hidden;
 }
 .bar-row__fill {
   height: 100%;
-  border-radius: 4px;
   background: var(--accent);
   transition: width 200ms ease;
 }
@@ -918,7 +918,7 @@ h2 {
   margin-top: 28px;
 }
 
-/* ---- Ajustes: tema claro/escuro (M8) — seg reaproveitado de Relatórios ---- */
+/* ---- Ajustes: tema claro/escuro (M8) — seg reaproveitado ---- */
 .settings-theme {
   display: grid;
   gap: 8px;
