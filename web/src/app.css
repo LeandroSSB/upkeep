@@ -177,28 +177,28 @@ h2 {
   margin-top: 8px;
 }
 
-/* ---- form-card: o formulário mora numa plaqueta ---- */
-/* Chanfro por gradiente de canto (não clip-path): o drop-shadow segue o
-   alpha e a plaqueta ganha a sombra no corte (clip-path cortaria o filter). */
+/* ---- form-card: o formulário mora numa folha do caderno ---- */
 .form-card {
-  padding: 16px 16px 18px;
+  padding: 18px 18px 20px;
   margin-bottom: 16px;
-  background: linear-gradient(225deg, transparent 20px, var(--card) 20px);
-  filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
 
-/* ---- Login: wordmark de entrada ---- */
+/* ---- Login: abertura do caderno ---- */
 .login-mark {
   margin-top: 32px;
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 44px;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 46px;
   line-height: 1;
-  letter-spacing: 0.02em;
 }
 .login-tagline {
-  margin: 2px 0 20px;
-  font-size: 14px;
+  margin: 4px 0 20px;
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 17px;
   color: var(--ink-soft);
 }
 
