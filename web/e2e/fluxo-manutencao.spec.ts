@@ -1,5 +1,5 @@
 // O fluxo de manutenção por km do começo ao fim: veículo com odômetro →
-// manutenção 10.000km/12m (km base) → sticker ok → odômetro estoura → vencido
+// manutenção 10.000km/12m (km base) → plaqueta .tag--ok → odômetro estoura → vencido
 // (home e detalhe, sob reload) → serviço lançado reseta a baseline → ok de novo,
 // histórico alimentado e relatório por ativo com o valor.
 import { test, expect } from "@playwright/test";

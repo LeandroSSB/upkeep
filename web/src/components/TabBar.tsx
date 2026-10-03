@@ -1,7 +1,7 @@
 // Barra inferior de tabs: Home / Relatórios / Ajustes — só nas telas "de bolso"
 // (o pathless layout em App.tsx decide quem recebe; login, detalhe e formulários
 // seguem sem). NavLink marca a ativa com aria-current="page"; o CSS pinta de
-// --workshop-blue. Ícones SVG inline (stroke 2), sem lib — feather-style.
+// --accent. Ícones SVG inline (stroke 2), sem lib — feather-style.
 import { NavLink } from "react-router-dom";
 
 // to="/" é caso especial do NavLink: só casa na raiz (ignora o comportamento

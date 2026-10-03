@@ -1,10 +1,10 @@
-// A linha "próximo vencimento" dos stickers de manutenção — e qual template é o
+// A linha "próximo vencimento" das plaquetas de manutenção — e qual template é o
 // pior de um asset (alimenta o herói da Home). Puro: "today" entra como
 // parâmetro para o teste não depender do relógio.
 import { formatDate, formatKm } from "./format";
 import type { Status } from "./types";
 
-/** O que o sticker de um template precisa para derivar o destaque (AssetTemplate satisfaz). */
+/** O que a plaqueta de um template precisa para derivar o destaque (AssetTemplate satisfaz). */
 export interface TemplateDue {
   status: Status | null;
   kmRemaining: number | null;
@@ -20,7 +20,7 @@ export function todayIso(now: Date = new Date()): string {
 }
 
 /**
- * Destaque do sticker conforme o status:
+ * Destaque da plaqueta conforme o status:
  * - vencido: "venceu {data}" quando o critério tempo venceu (dateDue já passou);
  *   "estourou {X} km" quando o km passou do limite (kmRemaining <= 0 — cobre o
  *   caso km estourado com dateDue ainda futura, onde "venceu {data futura}" mentiria).

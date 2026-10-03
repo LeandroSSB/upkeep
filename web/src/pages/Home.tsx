@@ -1,5 +1,6 @@
-// Home — o banco de etiquetas: sticker-herói do mais urgente, seções VENCIDOS /
-// VENCE EM BREVE e a lista ATIVOS com os dots de contagem.
+// Home — o banco de etiquetas: mostrador HeroPanel do mais urgente, seções
+// VENCIDOS / VENCE EM BREVE em plaquetas e a lista ATIVOS com as células de
+// contagem.
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { listAssets, listTemplates, type Asset } from "../api/assets";
