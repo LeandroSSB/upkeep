@@ -1,6 +1,13 @@
 /* Design tokens do upkeep — "etiqueta de revisão" (ver DESIGN CONTRACT do plan
-   2026-10-02-upkeep-web.md). Toda cor/tipo/spacing do app deriva daqui. */
+   2026-10-02-upkeep-web.md). Toda cor/tipo/spacing do app deriva daqui.
+
+   Tema: o claro é o :root base; o escuro ("oficina à noite") entra por DOIS
+   gatilhos com os MESMOS valores — escolha explícita (data-theme="dark",
+   setado pelo toggle/lib theme.ts) ou o SO pedindo escuro quando o usuário
+   não travou o claro (:not([data-theme="light"])). color-scheme faz inputs,
+   scrollbars e controles nativos acompanharem. */
 :root {
+  color-scheme: light dark;
   --paper: #F4F5F1;        /* fundo: papel de manual */
   --card: #FFFFFF;         /* superfície de sticker/card */
   --ink: #1A211B;          /* texto, quase-preto com traço verde */
@@ -12,4 +19,45 @@
   --workshop-blue: #235E8C;/* interativo: links, botões primários, foco */
   --workshop-blue-ink: #FFFFFF;
   --focus-ring: 0 0 0 3px rgba(35, 94, 140, 0.35);
+}
+
+/* Escuro explícito (toggle "Escuro"). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #14171A;        /* grafite de oficina */
+  --card: #1C2126;
+  --ink: #E4E7E2;
+  --ink-soft: #9BA19A;
+  --line: #2C3238;
+  --tag-red: #E05B49;      /* versões dessaturadas/claras p/ contraste AA no escuro */
+  --tag-amber: #D9A545;
+  --tag-green: #57B37C;
+  --workshop-blue: #6FA8DC;
+  --workshop-blue-ink: #14171A;
+  --focus-ring: 0 0 0 3px rgba(111, 168, 220, 0.4);
+}
+
+/* Escuro pelo SO ("Automático"): vale a menos que o usuário tenha travado
+   o claro — data-theme="light" fica de fora do :not(). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #14171A;
+    --card: #1C2126;
+    --ink: #E4E7E2;
+    --ink-soft: #9BA19A;
+    --line: #2C3238;
+    --tag-red: #E05B49;
+    --tag-amber: #D9A545;
+    --tag-green: #57B37C;
+    --workshop-blue: #6FA8DC;
+    --workshop-blue-ink: #14171A;
+    --focus-ring: 0 0 0 3px rgba(111, 168, 220, 0.4);
+  }
+}
+
+/* "Claro" explícito num SO escuro: o color-scheme base (light dark) deixaria
+   scrollbars/inputs do SO em dark sobre página clara — trava em light. */
+:root[data-theme="light"] {
+  color-scheme: light;
 }

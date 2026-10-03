@@ -708,6 +708,17 @@ h2 {
   margin-top: 28px;
 }
 
+/* ---- Ajustes: tema claro/escuro (M8) — botões reaproveitam .report-toggle ---- */
+.settings-theme {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin-top: 28px;
+}
+.settings-theme .report-toggle {
+  margin-top: 0; /* o gap da seção já respira; cancela o margin do toggle de Relatórios */
+}
+
 /* separação dos perigosos: sair da conta */
 .settings-footer {
   display: flex;

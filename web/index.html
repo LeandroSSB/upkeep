@@ -4,6 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#F4F5F1" />
+    <script>
+      // Anti-flash (M8): aplica o tema salvo ANTES do bundle/CSS pintarem a
+      // primeira tela. Espelha lib/theme.ts: só "light"/"dark" setam
+      // data-theme — "auto" deixa o @media (prefers-color-scheme) do
+      // tokens.css resolver. A meta theme-color já acompanha o tema resolvido.
+      (function () {
+        try {
+          var t = localStorage.getItem("upkeep-theme");
+          if (t === "light" || t === "dark")
+            document.documentElement.setAttribute("data-theme", t);
+          var dark =
+            t === "dark" ||
+            (t !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute("content", dark ? "#14171A" : "#F4F5F1");
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />

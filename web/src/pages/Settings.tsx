@@ -10,6 +10,7 @@ import { AppShell } from "../components/AppShell";
 import { Field } from "../components/Field";
 import { Toast } from "../components/Toast";
 import { fieldMessage, leftoverMessage } from "../lib/formErrors";
+import { applyTheme, readThemePref, type ThemePref } from "../lib/theme";
 import { useSession } from "../state/session";
 
 // espelho do validator do servidor (MeEndpoints) — inválido nem sai do browser
@@ -24,6 +25,46 @@ function contagemImportados(n: Importados): string {
     `${parte(n.assets, "ativo", "ativos")}, ` +
     `${parte(n.templates, "manutenção", "manutenções")}, ` +
     `${parte(n.services, "serviço", "serviços")} importados`
+  );
+}
+
+// Aparência (M8): 3 estados de tema. Reaproveita o visual segmentado do toggle
+// de Relatórios (.report-toggle) — mesmos .btn compactos com aria-pressed.
+const THEME_OPTIONS: ReadonlyArray<{ value: ThemePref; label: string }> = [
+  { value: "auto", label: "Automático" },
+  { value: "light", label: "Claro" },
+  { value: "dark", label: "Escuro" },
+];
+
+function ThemeSection() {
+  // estado inicial do que o bootstrap/script inline deixou persistido
+  const [pref, setPref] = useState<ThemePref>(readThemePref);
+
+  function choose(value: ThemePref) {
+    setPref(value);
+    applyTheme(value); // aplica na hora: atributo + meta + localStorage
+  }
+
+  return (
+    <div className="settings-theme">
+      <h2>Aparência</h2>
+      <div className="report-toggle" role="group" aria-label="Tema">
+        {THEME_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={`btn${pref === option.value ? " btn--primary" : ""}`}
+            aria-pressed={pref === option.value}
+            onClick={() => choose(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+      <p className="settings-topic__hint">
+        Automático segue o tema do sistema; Claro e Escuro valem sempre.
+      </p>
+    </div>
   );
 }
 
@@ -277,6 +318,8 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
           </p>
         )}
       </form>
+
+      <ThemeSection />
 
       <div className="settings-data">
         <h2>Seus dados</h2>
