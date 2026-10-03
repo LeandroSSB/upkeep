@@ -28,8 +28,8 @@ function contagemImportados(n: Importados): string {
   );
 }
 
-// Aparência (M8): 3 estados de tema. Reaproveita o visual segmentado do toggle
-// de Relatórios (.report-toggle) — mesmos .btn compactos com aria-pressed.
+// Aparência (M8): 3 estados de tema. Reaproveita o controle segmentado
+// (.seg) de Relatórios — mesma plaqueta com aria-pressed.
 const THEME_OPTIONS: ReadonlyArray<{ value: ThemePref; label: string }> = [
   { value: "auto", label: "Automático" },
   { value: "light", label: "Claro" },
@@ -48,12 +48,12 @@ function ThemeSection() {
   return (
     <div className="settings-theme">
       <h2>Aparência</h2>
-      <div className="report-toggle" role="group" aria-label="Tema">
+      <div className="seg" role="group" aria-label="Tema">
         {THEME_OPTIONS.map((option) => (
           <button
             key={option.value}
             type="button"
-            className={`btn${pref === option.value ? " btn--primary" : ""}`}
+            className={`seg__btn${pref === option.value ? " seg__btn--on" : ""}`}
             aria-pressed={pref === option.value}
             onClick={() => choose(option.value)}
           >

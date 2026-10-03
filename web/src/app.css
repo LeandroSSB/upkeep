@@ -743,15 +743,29 @@ h2 {
   flex: 1;
 }
 
-/* ---- Relatórios: alternância por ativo / por mês ---- */
-.report-toggle {
-  display: flex;
-  gap: 8px;
+/* ---- controle segmentado (agrupamento de Relatórios, tema dos Ajustes) ---- */
+.seg {
+  display: inline-flex;
+  gap: 2px;
   margin-top: 16px;
+  padding: 3px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
 }
-.report-toggle .btn {
-  padding: 8px 12px;
+.seg__btn {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--ink-soft);
+  font-weight: 600;
   font-size: 14px;
+  cursor: pointer;
+}
+.seg__btn--on {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* ---- Relatórios: filtros de período/ativo ---- */
@@ -820,20 +834,22 @@ h2 {
   flex: none;
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
 }
-/* trilho + preenchimento: largura % do maior total da lista */
+/* trilho + preenchimento: régua grande — largura % do maior total da lista */
 .bar-row__track {
   height: 8px;
   margin-top: 6px;
   border-radius: 4px;
-  background: var(--line);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
   overflow: hidden;
 }
 .bar-row__fill {
   height: 100%;
   border-radius: 4px;
-  background: var(--workshop-blue);
+  background: var(--accent);
+  transition: width 200ms ease;
 }
 
 /* ---- Ajustes: link do tópico ntfy + microcopy ---- */
@@ -854,15 +870,15 @@ h2 {
   margin-top: 28px;
 }
 
-/* ---- Ajustes: tema claro/escuro (M8) — botões reaproveitam .report-toggle ---- */
+/* ---- Ajustes: tema claro/escuro (M8) — seg reaproveitado de Relatórios ---- */
 .settings-theme {
   display: grid;
   gap: 8px;
   justify-items: start;
   margin-top: 28px;
 }
-.settings-theme .report-toggle {
-  margin-top: 0; /* o gap da seção já respira; cancela o margin do toggle de Relatórios */
+.settings-theme .seg {
+  margin-top: 0; /* o gap da seção já respira; cancela o margin do .seg */
 }
 
 /* separação dos perigosos: sair da conta */

@@ -94,10 +94,10 @@ export default function Reports() {
     <AppShell>
       <h1>Relatórios</h1>
 
-        <div className="report-toggle" role="group" aria-label="Agrupar custos">
+        <div className="seg" role="group" aria-label="Agrupar custos">
           <button
             type="button"
-            className={`btn${view === "asset" ? " btn--primary" : ""}`}
+            className={`seg__btn${view === "asset" ? " seg__btn--on" : ""}`}
             aria-pressed={view === "asset"}
             onClick={() => setView("asset")}
           >
@@ -105,7 +105,7 @@ export default function Reports() {
           </button>
           <button
             type="button"
-            className={`btn${view === "month" ? " btn--primary" : ""}`}
+            className={`seg__btn${view === "month" ? " seg__btn--on" : ""}`}
             aria-pressed={view === "month"}
             onClick={() => setView("month")}
           >
