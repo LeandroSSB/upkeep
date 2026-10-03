@@ -487,6 +487,13 @@ h2 {
 .workorder__km-toggle {
   font-size: 14px;
 }
+/* custo por km do veículo: linha mono pequena em linha própria sob o odômetro */
+.workorder__custo-km {
+  flex-basis: 100%;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
 
 /* form inline do km */
 .km-form {
@@ -641,6 +648,24 @@ h2 {
 /* total do período: display-xl com respiro próprio */
 .report-total {
   margin-bottom: 8px;
+}
+
+/* ---- Relatórios: card de custo por km (veículo selecionado) ---- */
+.report-km {
+  margin: 20px 0 8px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line); /* mesmo hairline pontilhado do km da OS */
+}
+.report-km .eyebrow {
+  margin: 0 0 4px; /* eyebrow herda 24px de topo — aqui a régua já separa */
+}
+.report-km__sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.report-km-empty {
+  margin-top: 12px;
 }
 
 /* ---- Relatórios: barras horizontais de custo por ativo ---- */

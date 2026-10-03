@@ -13,6 +13,10 @@ namespace Upkeep.IntegrationTests;
 /// Task M6-2: ?groupBy=month soma à resposta a régua mensal de 12 meses
 /// (clampada ao período from/to, meses vazios com zero) — sem o parâmetro,
 /// porMes vem null (compat com clientes antigos).
+/// Task M8-2: assetId de um VEÍCULO do usuário soma custoPorKm { total,
+/// kmRodados, porKm } — total segue from/to; kmRodados = odometroAtual −
+/// min(primeiro odômetro conhecido: baselines de template + odômetros de
+/// serviço > 0, base histórica que IGNORA datas); kmRodados ≤ 0 → porKm null.
 /// </summary>
 [Collection("ApiTests")]
 public class ReportTests(ApiFixture fixture)
@@ -20,17 +24,23 @@ public class ReportTests(ApiFixture fixture)
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     private static async Task<Guid> CreateAssetAsync(HttpClient client, CancellationToken ct,
-        string nome = "Asset")
+        string nome = "Asset", string tipo = "veiculo", int? odometroAtual = null)
     {
         var unico = nome + " " + Guid.NewGuid().ToString("N")[..8];
         return (await (await client.PostAsJsonAsync("/assets",
-            new { nome = unico, tipo = "veiculo" }, ct))
+            new { nome = unico, tipo, odometroAtual }, ct))
             .Content.ReadFromJsonAsync<AssetResponse>(Json, ct))!.Id;
     }
 
     private static Task<HttpResponseMessage> PostServiceAsync(HttpClient client, Guid assetId,
-        DateOnly data, decimal custo, CancellationToken ct) =>
-        client.PostAsJsonAsync($"/assets/{assetId}/services", new { data, custo }, ct);
+        DateOnly data, decimal custo, CancellationToken ct, int? odometro = null) =>
+        client.PostAsJsonAsync($"/assets/{assetId}/services", new { data, custo, odometro }, ct);
+
+    /// <summary>Template de km com baseline — intervalo_km é obrigatório quando há baseline.</summary>
+    private static Task<HttpResponseMessage> PostTemplateAsync(HttpClient client, Guid assetId,
+        int baselineOdometro, CancellationToken ct) =>
+        client.PostAsJsonAsync($"/assets/{assetId}/templates",
+            new { titulo = "Revisão", intervaloKm = 10000, baselineOdometro, baselineData = new DateOnly(2026, 1, 1) }, ct);
 
     private static async Task<CostReportResponse> GetReportAsync(HttpClient client,
         CancellationToken ct, string? query = null)
@@ -305,6 +315,136 @@ public class ReportTests(ApiFixture fixture)
         Assert.Equal(asset, rel.PorAsset[0].AssetId);
         Assert.Equal(123m, rel.Total);
     }
+
+    // ---- custoPorKm: insight de veículo (Task M8-2) ----
+
+    [Fact]
+    public async Task CustoPorKm_veiculo_total_segue_filtros_km_e_base_historica()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var carro = await CreateAssetAsync(client, ct, "Corsa 2012");
+
+        await PostTemplateAsync(client, carro, 8000, ct);
+        // DENTRO da janela: odômetro 12000, custo 600 — auto-advance → atual 12000
+        await PostServiceAsync(client, carro, new DateOnly(2026, 7, 10), 600m, ct, odometro: 12000);
+        // FORA da janela: odômetro 5000, custo 400 (o MENOR conhecido — prova que a
+        // base do kmRodados é histórica e ignora from/to)
+        await PostServiceAsync(client, carro, new DateOnly(2026, 1, 15), 400m, ct, odometro: 5000);
+        await client.PostAsJsonAsync($"/assets/{carro}/odometer", new { odometer = 20000 }, ct);
+
+        var filtrado = await GetReportAsync(client, ct,
+            $"assetId={carro}&from=2026-06-01&to=2026-09-30");
+
+        Assert.NotNull(filtrado.CustoPorKm);
+        Assert.Equal(600m, filtrado.CustoPorKm!.Total);    // só o serviço dentro da janela
+        Assert.Equal(15000, filtrado.CustoPorKm.KmRodados); // 20000 − min(5000 fora da janela, 8000, 12000)
+        Assert.Equal(0.04m, filtrado.CustoPorKm.PorKm);     // 600/15000
+
+        var aberto = await GetReportAsync(client, ct, $"assetId={carro}");
+        Assert.Equal(1000m, aberto.CustoPorKm!.Total);      // sem filtro: 600 + 400
+        Assert.Equal(15000, aberto.CustoPorKm.KmRodados);
+        Assert.Equal(0.067m, aberto.CustoPorKm.PorKm);      // 1000/15000 = 0,0666… → round 3
+    }
+
+    [Fact]
+    public async Task CustoPorKm_baseline_de_template_e_candidato_e_servico_sem_odometro_nao()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var carro = await CreateAssetAsync(client, ct, "Corsa 2012", odometroAtual: 20000);
+
+        // baseline 5000 é o ÚNICO primeiro conhecido: serviço não traz odômetro
+        await PostTemplateAsync(client, carro, 5000, ct);
+        await PostServiceAsync(client, carro, new DateOnly(2026, 3, 10), 300m, ct); // odômetro null
+
+        var rel = await GetReportAsync(client, ct, $"assetId={carro}");
+
+        Assert.NotNull(rel.CustoPorKm);
+        Assert.Equal(300m, rel.CustoPorKm!.Total);
+        Assert.Equal(15000, rel.CustoPorKm.KmRodados); // 20000 − baseline 5000
+        Assert.Equal(0.02m, rel.CustoPorKm.PorKm);      // 300/15000
+    }
+
+    [Fact]
+    public async Task CustoPorKm_sem_odometro_inicial_ou_atual_km_zero_porKm_null()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+
+        // atual conhecido, mas nenhum baseline/serviço com odômetro > 0
+        var semInicial = await CreateAssetAsync(client, ct, "Corsa 2012", odometroAtual: 20000);
+        await PostServiceAsync(client, semInicial, new DateOnly(2026, 3, 10), 250m, ct);
+        var rel = await GetReportAsync(client, ct, $"assetId={semInicial}");
+        Assert.NotNull(rel.CustoPorKm);
+        Assert.Equal(250m, rel.CustoPorKm!.Total);
+        Assert.Equal(0, rel.CustoPorKm.KmRodados);
+        Assert.Null(rel.CustoPorKm.PorKm);
+
+        // odômetro atual nunca registrado (baseline existe, mas atual é null)
+        var semAtual = await CreateAssetAsync(client, ct, "Kombi");
+        await PostTemplateAsync(client, semAtual, 5000, ct);
+        await PostServiceAsync(client, semAtual, new DateOnly(2026, 3, 11), 100m, ct);
+        var relB = await GetReportAsync(client, ct, $"assetId={semAtual}");
+        Assert.Equal(100m, relB.CustoPorKm!.Total);
+        Assert.Equal(0, relB.CustoPorKm.KmRodados);
+        Assert.Null(relB.CustoPorKm.PorKm);
+
+        // km zero: primeiro conhecido == atual (não andou desde a base)
+        var parado = await CreateAssetAsync(client, ct, "Fusca");
+        await PostServiceAsync(client, parado, new DateOnly(2026, 3, 12), 90m, ct, odometro: 5000);
+        var relC = await GetReportAsync(client, ct, $"assetId={parado}");
+        Assert.Equal(90m, relC.CustoPorKm!.Total);
+        Assert.Equal(0, relC.CustoPorKm.KmRodados); // 5000 − 5000
+        Assert.Null(relC.CustoPorKm.PorKm);
+    }
+
+    [Fact]
+    public async Task CustoPorKm_asset_nao_veiculo_null()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var casa = await CreateAssetAsync(client, ct, "Apartamento", tipo: "casa");
+        await PostServiceAsync(client, casa, new DateOnly(2026, 4, 1), 434.46m, ct);
+
+        var rel = await GetReportAsync(client, ct, $"assetId={casa}");
+
+        Assert.Equal(434.46m, rel.Total); // relatório em si segue normal
+        Assert.Null(rel.CustoPorKm);
+    }
+
+    [Fact]
+    public async Task CustoPorKm_sem_assetId_null()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (client, _) = await fixture.CreateAuthenticatedClientAsync();
+        var carro = await CreateAssetAsync(client, ct, "Corsa 2012", odometroAtual: 20000);
+        await PostTemplateAsync(client, carro, 5000, ct);
+        await PostServiceAsync(client, carro, new DateOnly(2026, 3, 10), 300m, ct, odometro: 12000);
+
+        var rel = await GetReportAsync(client, ct); // sem assetId
+
+        Assert.Single(rel.PorAsset);
+        Assert.Null(rel.CustoPorKm);
+    }
+
+    [Fact]
+    public async Task CustoPorKm_assetId_alheio_null_e_resposta_vazia()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (alice, _) = await fixture.CreateAuthenticatedClientAsync();
+        var (bob, _) = await fixture.CreateAuthenticatedClientAsync();
+        var doBob = await CreateAssetAsync(bob, ct, "Corsa do Bob", odometroAtual: 20000);
+        await PostTemplateAsync(bob, doBob, 5000, ct);
+        await PostServiceAsync(bob, doBob, new DateOnly(2026, 3, 10), 300m, ct, odometro: 12000);
+
+        // asset de bob visto pela alice: invisível → custoPorKm null + vazio como hoje
+        var rel = await GetReportAsync(alice, ct, $"assetId={doBob}");
+
+        Assert.Equal(0m, rel.Total);
+        Assert.Empty(rel.PorAsset);
+        Assert.Null(rel.CustoPorKm);
+    }
 }
 
 public sealed record CostReportResponse(
@@ -312,7 +452,13 @@ public sealed record CostReportResponse(
     List<CostByAssetResponse> PorAsset,
     DateOnly? De,
     DateOnly? Ate,
-    List<CostByMonthResponse>? PorMes = null);
+    List<CostByMonthResponse>? PorMes = null,
+    CustoPorKmResponse? CustoPorKm = null);
+
+public sealed record CustoPorKmResponse(
+    decimal Total,
+    int KmRodados,
+    decimal? PorKm);
 
 public sealed record CostByMonthResponse(
     string Mes,

@@ -6,7 +6,7 @@ import { listAssets, type Asset } from "../api/assets";
 import { ApiError } from "../api/client";
 import { getCostReport, type CostReport } from "../api/reports";
 import { AppShell } from "../components/AppShell";
-import { formatBRL, formatMonth } from "../lib/format";
+import { formatBRL, formatKm, formatMonth } from "../lib/format";
 
 function plural(n: number, um: string, varios: string): string {
   return `${n} ${n === 1 ? um : varios}`;
@@ -162,6 +162,24 @@ export default function Reports() {
           <>
             <p className="eyebrow">{view === "month" ? "Total nos últimos 12 meses" : "Total no período"}</p>
             <p className="display-xl report-total">{formatBRL(totalExibido)}</p>
+
+            {/* veículo selecionado: insight de custo por km acima das barras.
+             * custoPorKm só vem não-null p/ veículo do usuário; porKm null =
+             * ainda sem primeiro odômetro conhecido p/ dividir. */}
+            {report.custoPorKm?.porKm != null && (
+              <div className="report-km">
+                <p className="eyebrow">Custo por km</p>
+                <p className="display-xl report-km__valor">
+                  {formatBRL(report.custoPorKm.porKm)}/km
+                </p>
+                <p className="report-km__sub">
+                  {formatBRL(report.custoPorKm.total)} em {formatKm(report.custoPorKm.kmRodados)}
+                </p>
+              </div>
+            )}
+            {report.custoPorKm != null && report.custoPorKm.porKm == null && (
+              <p className="section-empty report-km-empty">Custo por km: ainda sem odômetro inicial</p>
+            )}
 
             {view === "asset" ? (
               <>

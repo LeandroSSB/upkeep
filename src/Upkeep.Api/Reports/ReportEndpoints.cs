@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Upkeep;
 using Upkeep.Api.Auth;
 using Upkeep.Infrastructure;
 
@@ -11,12 +12,22 @@ public sealed record CostByAssetResponse(Guid AssetId, string Nome, decimal Tota
 /// <summary>Mês "yyyy-MM" (régua cronológica, zeros incluídos) — só com groupBy=month.</summary>
 public sealed record CostByMonthResponse(string Mes, decimal Total, int Quantidade);
 
+/// <summary>
+/// Custo por km de um VEÍCULO (Task M8-2) — só quando assetId é um veículo do
+/// usuário. "Km rodados" = odometroAtual − primeiro odômetro CONHECIDO, onde o
+/// primeiro conhecido é o mínimo entre baselines de template e odômetros de
+/// serviço (valores &gt; 0). A base é HISTÓRICA: ignora from/to (o veículo não
+/// nasceu no início do filtro) — só o total segue as mesmas regras do relatório.
+/// </summary>
+public sealed record CustoPorKmResponse(decimal Total, int KmRodados, decimal? PorKm);
+
 public sealed record CostReportResponse(
     decimal Total,
     List<CostByAssetResponse> PorAsset,
     DateOnly? De,
     DateOnly? Ate,
-    List<CostByMonthResponse>? PorMes = null);
+    List<CostByMonthResponse>? PorMes = null,
+    CustoPorKmResponse? CustoPorKm = null);
 
 public static class ReportEndpoints
 {
@@ -95,7 +106,44 @@ public static class ReportEndpoints
                 }
             }
 
-            return Results.Ok(new CostReportResponse(porAsset.Sum(r => r.Total), porAsset, from, to, porMes));
+            var totalFiltrado = porAsset.Sum(r => r.Total);
+
+            // custoPorKm (Task M8-2): apenas quando assetId aponta um VEÍCULO do
+            // próprio usuário (asset alheio é invisível → null, igual ao restante
+            // da resposta). Definição de "km rodados": odometroAtual − primeiro
+            // odômetro CONHECIDO (min entre baselines de template e odômetros de
+            // serviço, valores > 0). A base é HISTÓRICA e ignora from/to — o
+            // veículo não nasceu no início do filtro; só o TOTAL segue os filtros
+            // (mesma agregação da query acima). Sem primeiro conhecido (ou atual
+            // null) → kmRodados 0; kmRodados <= 0 → porKm null (não dividiu).
+            CustoPorKmResponse? custoPorKm = null;
+            if (assetId.HasValue)
+            {
+                var asset = await db.GetOwnedAssetAsync(assetId.Value, userId);
+                if (asset is { Tipo: AssetTipo.Veiculo })
+                {
+                    // MinAsync com seletor nullable: agregado SQL MIN — vazio → null
+                    var minBaseline = await db.Templates
+                        .Where(t => t.AssetId == asset.Id && t.BaselineOdometro > 0)
+                        .MinAsync(t => t.BaselineOdometro);
+                    var minServico = await db.Services
+                        .Where(s => s.AssetId == asset.Id && s.Odometro > 0)
+                        .MinAsync(s => s.Odometro);
+
+                    var conhecidos = new[] { minBaseline, minServico }
+                        .Where(v => v.HasValue).Select(v => v!.Value).ToList();
+                    var kmRodados = asset.OdometroAtual.HasValue && conhecidos.Count > 0
+                        ? asset.OdometroAtual.Value - conhecidos.Min()
+                        : 0;
+
+                    custoPorKm = new CustoPorKmResponse(
+                        totalFiltrado,
+                        kmRodados,
+                        kmRodados > 0 ? Math.Round(totalFiltrado / kmRodados, 3) : null);
+                }
+            }
+
+            return Results.Ok(new CostReportResponse(totalFiltrado, porAsset, from, to, porMes, custoPorKm));
         });
 
         return app;

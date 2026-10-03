@@ -16,6 +16,19 @@ export interface CostByMonth {
   quantidade: number;
 }
 
+/**
+ * Custo por km — presente quando assetId é um VEÍCULO do usuário (demais casos
+ * null). total segue os filtros do relatório; kmRodados = odômetro atual −
+ * primeiro odômetro conhecido (base histórica, ignora datas).
+ */
+export interface CustoPorKm {
+  total: number;
+  kmRodados: number;
+  /** total/kmRodados arredondado a 3 decimais pelo servidor; null quando
+   * kmRodados <= 0 (sem primeiro odômetro conhecido ou atual não registrado). */
+  porKm: number | null;
+}
+
 export interface CostReport {
   total: number;
   /** Ordenado pela API por total desc. */
@@ -25,6 +38,8 @@ export interface CostReport {
   ate: string | null;
   /** Presente apenas com groupBy=month; sem o parâmetro a API devolve null. */
   porMes: CostByMonth[] | null;
+  /** Presente apenas quando assetId é um veículo do usuário (senão null). */
+  custoPorKm: CustoPorKm | null;
 }
 
 export interface CostFilters {
