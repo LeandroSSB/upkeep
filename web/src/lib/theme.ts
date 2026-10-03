@@ -7,7 +7,7 @@ export type ThemePref = "auto" | "light" | "dark";
 const STORAGE_KEY = "upkeep-theme";
 
 // meta theme-color acompanha o tema RESOLVIDO (cor da barra do navegador/PWA)
-export const THEME_COLORS = { light: "#F4F5F1", dark: "#14171A" } as const;
+export const THEME_COLORS = { light: "#E9EEEF", dark: "#0F191C" } as const;
 
 export function isThemePref(value: unknown): value is ThemePref {
   return value === "auto" || value === "light" || value === "dark";

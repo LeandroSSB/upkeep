@@ -1,14 +1,14 @@
-// Shell comum a todas as telas: coluna de bolso + header (wordmark + dot).
-// `dot` sobrescreve o neutro (a Home passa o pior status global da lista);
+// Shell comum a todas as telas: coluna de bolso + header (wordmark + lamp).
+// `lamp` sobrescreve o neutro (a Home passa o pior status global da lista);
 // `after` entra depois do <main> (FAB da Home, toast do AssetDetail).
 import type { ReactNode } from "react";
 
 export function AppShell({
-  dot,
+  lamp,
   children,
   after,
 }: {
-  dot?: ReactNode;
+  lamp?: ReactNode;
   children?: ReactNode;
   after?: ReactNode;
 }) {
@@ -16,7 +16,7 @@ export function AppShell({
     <div className="shell">
       <header className="app-header">
         <span className="wordmark">upkeep</span>
-        {dot ?? <span className="dot" aria-hidden="true" />}
+        {lamp ?? <span className="lamp" aria-hidden="true" />}
       </header>
       <main>{children}</main>
       {after}

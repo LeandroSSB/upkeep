@@ -28,7 +28,7 @@ beforeEach(() => {
   // meta theme-color como no index.html (applyTheme só a atualiza se existir)
   const meta = document.createElement("meta");
   meta.name = "theme-color";
-  meta.content = "#F4F5F1";
+  meta.content = "#E9EEEF";
   document.head.appendChild(meta);
 });
 afterEach(() => {
@@ -75,14 +75,14 @@ describe("applyTheme", () => {
   it("dark: seta data-theme, meta escura e persiste", () => {
     applyTheme("dark");
     expect(document.documentElement.dataset.theme).toBe("dark");
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#14171A");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#0F191C");
     expect(localStorage.getItem("upkeep-theme")).toBe("dark");
   });
 
   it("light: seta data-theme, meta clara e persiste", () => {
     applyTheme("light");
     expect(document.documentElement.dataset.theme).toBe("light");
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#F4F5F1");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#E9EEEF");
     expect(localStorage.getItem("upkeep-theme")).toBe("light");
   });
 
@@ -91,7 +91,7 @@ describe("applyTheme", () => {
     prefersDark = false;
     applyTheme("auto");
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#F4F5F1");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#E9EEEF");
     expect(localStorage.getItem("upkeep-theme")).toBe("auto");
   });
 
@@ -99,7 +99,7 @@ describe("applyTheme", () => {
     prefersDark = true;
     applyTheme("auto");
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#14171A");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#0F191C");
   });
 });
 
@@ -114,19 +114,19 @@ describe("watchSystemTheme", () => {
 
     prefersDark = true; // anoiteceu
     fireSystemChange();
-    expect(metaContent()).toBe("#14171A");
+    expect(metaContent()).toBe("#0F191C");
     expect(onChange).toHaveBeenCalledTimes(1);
 
     prefersDark = false; // amanheceu
     fireSystemChange();
-    expect(metaContent()).toBe("#F4F5F1");
+    expect(metaContent()).toBe("#E9EEEF");
     expect(onChange).toHaveBeenCalledTimes(2);
 
     stop();
   });
 
   it("pref explícita: troca do SO é no-op (meta intocado, onChange não roda)", () => {
-    applyTheme("dark"); // meta travado em #14171A pela escolha do usuário
+    applyTheme("dark"); // meta travado em #0F191C pela escolha do usuário
     const before = metaContent();
     const onChange = vi.fn();
     const stop = watchSystemTheme(onChange);

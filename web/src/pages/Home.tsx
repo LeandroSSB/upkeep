@@ -28,7 +28,7 @@ function pickHero(assets: Asset[]): { asset: Asset; status: Status } | null {
   return null;
 }
 
-/** Pior status global — alimenta o dot do header. */
+/** Pior status global — alimenta a lamp do header. */
 function worstStatus(assets: Asset[]): Status | null {
   if (assets.some((a) => a.statusAgregado === "vencido")) return "vencido";
   if (assets.some((a) => a.statusAgregado === "vence_em_breve")) return "vence_em_breve";
@@ -105,10 +105,10 @@ export default function Home() {
 
   return (
     <AppShell
-      dot={
+      lamp={
         worst ? (
           <span
-            className={`dot dot--${worst}`}
+            className={`lamp lamp--${worst}`}
             aria-label={`pior status: ${statusLabel(worst)}`}
           />
         ) : undefined

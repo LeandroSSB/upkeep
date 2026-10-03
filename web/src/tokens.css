@@ -1,44 +1,60 @@
-/* Design tokens do upkeep — "etiqueta de revisão" (ver DESIGN CONTRACT do plan
-   2026-10-02-upkeep-web.md). Toda cor/tipo/spacing do app deriva daqui.
+/* Design tokens v2 — "prontuário de oficina": papel milimetrado frio, plaquetas
+   chanfradas e um mostrador aceso para o que vence (DESIGN CONTRACT v2 em
+   docs/superpowers/plans/2026-10-03-upkeep-web-redesign.md).
 
-   Tema: o claro é o :root base; o escuro ("oficina à noite") entra por DOIS
-   gatilhos com os MESMOS valores — escolha explícita (data-theme="dark",
-   setado pelo toggle/lib theme.ts) ou o SO pedindo escuro quando o usuário
-   não travou o claro (:not([data-theme="light"])). color-scheme faz inputs,
-   scrollbars e controles nativos acompanharem. */
+   Tema: claro é o :root base; escuro ("painel à noite") entra por DOIS gatilhos
+   com os MESMOS valores — escolha explícita (data-theme="dark", setado pelo
+   toggle/lib theme.ts) ou o SO pedindo escuro quando o usuário não travou o
+   claro (:not([data-theme="light"])). color-scheme leva inputs/scrollbars juntos. */
 :root {
   color-scheme: light dark;
-  --paper: #F4F5F1;        /* fundo: papel de manual */
-  --card: #FFFFFF;         /* superfície de sticker/card */
-  --ink: #1A211B;          /* texto, quase-preto com traço verde */
-  --ink-soft: #5B615A;     /* texto secundário */
-  --line: #D8DAD2;         /* hairlines, bordas */
-  --tag-red: #BF3B2B;      /* vencido */
-  --tag-amber: #9A6A00;    /* vence_em_breve */
-  --tag-green: #2F7D4F;    /* ok */
-  --workshop-blue: #235E8C;/* interativo: links, botões primários, foco */
-  --workshop-blue-ink: #FFFFFF;
-  --focus-ring: 0 0 0 3px rgba(35, 94, 140, 0.35);
-  --shadow-1: 0 1px 2px rgba(26, 33, 27, 0.08);  /* repouso: sticker, OS */
-  --shadow-2: 0 2px 6px rgba(26, 33, 27, 0.16);  /* flutuante: toast, FAB, update-bar */
+  --paper: #E9EEEF;        /* porcelana fria: a folha da prancheta */
+  --grid: #D8E1E2;         /* linha do papel milimetrado (24px no body) */
+  --card: #FFFFFF;         /* plaqueta */
+  --ink: #16232A;          /* grafite-azulado */
+  --ink-soft: #55666D;     /* texto secundário */
+  --line: #CBD6D8;         /* hairlines, bordas */
+  --tag-red: #B3372A;      /* vencido */
+  --tag-amber: #8A6100;    /* vence_em_breve */
+  --tag-green: #22774B;    /* ok */
+  --accent: #0C5A58;       /* petróleo: interativo */
+  --accent-ink: #FFFFFF;
+  --panel: #14262B;        /* mostrador aceso (herói, odômetro) */
+  --panel-ink: #E6F0EE;
+  --panel-soft: #9DB8B4;
+  /* lâmpadas do painel: constantes nos 2 temas (o painel é sempre escuro) */
+  --lamp-red: #E0604E;
+  --lamp-amber: #D9A545;
+  --lamp-green: #57B37C;
+  --focus-ring: 0 0 0 3px rgba(12, 90, 88, 0.35);
+  --shadow-1: 0 1px 2px rgba(22, 35, 42, 0.08);  /* repouso */
+  --shadow-2: 0 3px 10px rgba(22, 35, 42, 0.18); /* flutuante: toast, FAB */
+  /* LEGADO v1 (--workshop-blue foi renomeado --accent): seções de componente
+     que as Tasks 2–5 ainda não substituíram continuam lendo daqui. Task 6 remove. */
+  --workshop-blue: var(--accent);
+  --workshop-blue-ink: var(--accent-ink);
 }
 
 /* Escuro explícito (toggle "Escuro"). */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #14171A;        /* grafite de oficina */
-  --card: #1C2126;
-  --ink: #E4E7E2;
-  --ink-soft: #9BA19A;
-  --line: #2C3238;
-  --tag-red: #E05B49;      /* versões dessaturadas/claras p/ contraste AA no escuro */
+  --paper: #0F191C;
+  --grid: rgba(230, 240, 238, 0.05);
+  --card: #172428;
+  --ink: #E2EBE9;
+  --ink-soft: #93A5A6;
+  --line: #243237;
+  --tag-red: #E0604E;
   --tag-amber: #D9A545;
   --tag-green: #57B37C;
-  --workshop-blue: #6FA8DC;
-  --workshop-blue-ink: #14171A;
-  --focus-ring: 0 0 0 3px rgba(111, 168, 220, 0.4);
+  --accent: #6FC8C1;
+  --accent-ink: #0F191C;
+  --panel: #0B1518; /* mais escuro que o card: o mostrador afunda */
+  --panel-ink: #E6F0EE;
+  --panel-soft: #9DB8B4;
+  --focus-ring: 0 0 0 3px rgba(111, 200, 193, 0.4);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.6);
+  --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.55);
 }
 
 /* Escuro pelo SO ("Automático"): vale a menos que o usuário tenha travado
@@ -46,24 +62,27 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --paper: #14171A;
-    --card: #1C2126;
-    --ink: #E4E7E2;
-    --ink-soft: #9BA19A;
-    --line: #2C3238;
-    --tag-red: #E05B49;
+    --paper: #0F191C;
+    --grid: rgba(230, 240, 238, 0.05);
+    --card: #172428;
+    --ink: #E2EBE9;
+    --ink-soft: #93A5A6;
+    --line: #243237;
+    --tag-red: #E0604E;
     --tag-amber: #D9A545;
     --tag-green: #57B37C;
-    --workshop-blue: #6FA8DC;
-    --workshop-blue-ink: #14171A;
-    --focus-ring: 0 0 0 3px rgba(111, 168, 220, 0.4);
+    --accent: #6FC8C1;
+    --accent-ink: #0F191C;
+    --panel: #0B1518;
+    --panel-ink: #E6F0EE;
+    --panel-soft: #9DB8B4;
+    --focus-ring: 0 0 0 3px rgba(111, 200, 193, 0.4);
     --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-    --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.6);
+    --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.55);
   }
 }
 
-/* "Claro" explícito num SO escuro: o color-scheme base (light dark) deixaria
-   scrollbars/inputs do SO em dark sobre página clara — trava em light. */
+/* "Claro" explícito num SO escuro: trava scrollbars/inputs em light. */
 :root[data-theme="light"] {
   color-scheme: light;
 }

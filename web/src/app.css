@@ -1,4 +1,4 @@
-/* upkeep — estilo base "etiqueta de revisão". Todo valor vem de tokens.css. */
+/* upkeep — estilo base v2 "prontuário de oficina". Todo valor vem de tokens.css. */
 
 /* ---- reset mínimo ---- */
 *,
@@ -8,10 +8,16 @@
   margin: 0;
 }
 
+/* a folha da prancheta: porcelana fria + papel milimetrado 24px (a régua
+   desenha o "medir" — o app inteiro é medição de intervalos) */
 body {
-  background: var(--paper);
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    var(--paper);
+  background-size: 24px 24px, 24px 24px, auto;
   color: var(--ink);
-  font: 400 16px/1.5 "IBM Plex Sans", system-ui, sans-serif;
+  font: 400 16px/1.55 "Barlow", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -30,22 +36,26 @@ textarea {
 }
 
 a {
-  color: var(--workshop-blue);
+  color: var(--accent);
 }
 
-/* ---- tipografia (escala do contract) ---- */
+/* ---- tipografia (escala do contract v2) ---- */
 h1 {
-  font-family: "Saira Condensed", system-ui, sans-serif;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 700;
-  font-size: 28px;
-  line-height: 1.1;
+  font-size: 30px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 h2 {
-  font-family: "Saira Condensed", system-ui, sans-serif;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 600;
   font-size: 20px;
   line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 /* ---- shell: coluna única de bolso, não estica no desktop ---- */
@@ -55,49 +65,276 @@ h2 {
   padding: 0 16px 80px; /* 80px: espaço p/ a tabbar fixa */
 }
 
-/* ---- header do app: wordmark + dot do pior status global ---- */
+/* ---- header do app: transparente — o milimetrado corre contínuo atrás ---- */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 -16px; /* sangra a borda inferior na largura toda da shell */
+  margin: 0 -16px;
   padding: 14px 16px;
-  background: var(--paper);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1.5px solid var(--line);
 }
 
 .wordmark {
-  font-family: "Saira Condensed", system-ui, sans-serif;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 700;
-  font-size: 26px;
+  font-size: 27px;
   line-height: 1;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
-.dot {
+/* lâmpada quadrada do pior status global (v2: quadrado na régua, não bolinha) */
+.lamp {
   flex: none;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: 2px;
   background: var(--ink-soft);
 }
-.dot--vencido { background: var(--tag-red); }
-.dot--vence_em_breve { background: var(--tag-amber); }
-.dot--ok { background: var(--tag-green); }
+.lamp--vencido { background: var(--tag-red); }
+.lamp--vence_em_breve { background: var(--tag-amber); }
+.lamp--ok { background: var(--tag-green); }
 
 /* ---- eyebrow: label de seção ---- */
 .eyebrow {
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
   margin: 24px 0 8px;
 }
-/* mais respiro antes da etiqueta inclinada do herói */
-.eyebrow--hero {
+
+/* display-xl: o número grande (mostrador da Home, total dos Relatórios) */
+.display-xl {
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+/* ---- botões ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ---- campos de formulário ---- */
+.field {
+  display: grid;
+  gap: 6px;
   margin-bottom: 14px;
+}
+.field > label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.field input,
+.field select,
+.field textarea {
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+/* ---- Formulários (ativo / template / serviço) ---- */
+.form-sub {
+  margin: 4px 0 20px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.input-mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* toast: aviso de sucesso, rodapé central, some sozinho (sem animação). */
+.toast {
+  pointer-events: none;
+  position: fixed;
+  left: 50%;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 12px 18px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 8px;
+  box-shadow: var(--shadow-2);
+  font-weight: 500;
+}
+
+/* ---- tabbar: navegação inferior das telas "de bolso" ---- */
+.tabbar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  justify-content: space-around;
+  background: var(--card);
+  border-top: 1.5px solid var(--line);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+}
+.tabbar a {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.tabbar a[aria-current="page"] {
+  color: var(--accent);
+}
+
+/* ---- Login: alternância entrar/criar + erros ---- */
+.login-switch {
+  margin: 8px 0 20px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+.field__error {
+  font-size: 14px;
+  color: var(--tag-red);
+}
+.form-error {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--tag-red);
+}
+
+/* ---- Home: carregamento / erro / vazio ---- */
+.loading {
+  margin: 24px 0;
+  color: var(--ink-soft);
+}
+.load-error {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  margin: 24px 0;
+}
+.empty-state {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+  margin: 24px 0;
+}
+
+/* card inteiro clicável (herói e seções VENCIDOS/VENCE EM BREVE) */
+.asset-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- FAB: cadastrar ativo, fixo no canto (acima da tabbar da Home) ---- */
+.fab {
+  position: fixed;
+  right: 18px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+}
+
+/* ---- update bar: nova versão do PWA disponível ---- */
+.update-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 8px;
+  box-shadow: var(--shadow-2);
+  font-size: 14px;
+}
+.update-bar__btn {
+  padding: 8px 14px;
+  border: 1.5px solid var(--paper);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- acessibilidade ---- */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 /* ---- sticker: a etiqueta de revisão (assinatura visual) ---- */
@@ -162,66 +399,6 @@ h2 {
   margin-top: 8px;
 }
 
-/* display-xl: o número grande (herói da Home, total dos Relatórios) */
-.display-xl {
-  font-family: "Saira Condensed", system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 40px;
-  line-height: 1.05;
-}
-
-/* ---- botões ---- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--ink);
-  font-weight: 600;
-  cursor: pointer;
-}
-.btn--primary {
-  background: var(--workshop-blue);
-  border-color: var(--workshop-blue);
-  color: var(--workshop-blue-ink);
-}
-
-/* ---- campos de formulário ---- */
-.field {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-.field > label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ink-soft);
-}
-.field input,
-.field select,
-.field textarea {
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--ink);
-}
-
-/* ---- Formulários (ativo / template / serviço) ---- */
-/* subtítulo de contexto sob o h1: nome do ativo, aviso de tipo... */
-.form-sub {
-  margin: 4px 0 20px;
-  font-size: 14px;
-  color: var(--ink-soft);
-}
-/* valores digitados (km, custo) em mono, como no logbook */
-.input-mono {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
-}
 /* checkbox que habilita o campo logo abaixo (intervalos por km/meses) */
 .field > label.check {
   display: flex;
@@ -235,109 +412,6 @@ h2 {
   width: 18px;
   height: 18px;
   accent-color: var(--workshop-blue);
-}
-.form-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 8px;
-}
-
-/* toast: aviso de sucesso, rodapé central, some sozinho (sem animação).
-   Sobra a tabbar (telas Home/Relatórios/Ajustes); nas demais só fica um pouco alto.
-   pointer-events:none — é só um aviso, não engole toques no que está atrás. */
-.toast {
-  pointer-events: none;
-  position: fixed;
-  left: 50%;
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  z-index: 20;
-  padding: 12px 18px;
-  background: var(--ink);
-  color: var(--paper);
-  border-radius: 8px;
-  box-shadow: var(--shadow-2);
-  font-weight: 500;
-}
-
-/* ---- tabbar: navegação inferior das telas "de bolso" ---- */
-.tabbar {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 0;
-  width: 100%;
-  max-width: 640px; /* mesma coluna da shell — não estica no desktop */
-  display: flex;
-  justify-content: space-around;
-  background: var(--card);
-  border-top: 1px solid var(--line);
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
-}
-.tabbar a {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  color: var(--ink-soft);
-  text-decoration: none;
-}
-/* item ativo: o NavLink marca com aria-current="page" */
-.tabbar a[aria-current="page"] {
-  color: var(--workshop-blue);
-}
-
-/* ---- Login: alternância entrar/criar + erros ---- */
-.login-switch {
-  margin: 8px 0 20px;
-  font-size: 14px;
-  color: var(--ink-soft);
-}
-.link {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--workshop-blue);
-  text-decoration: underline;
-  cursor: pointer;
-  font: inherit;
-}
-.field__error {
-  font-size: 14px;
-  color: var(--tag-red);
-}
-.form-error {
-  margin: 0 0 14px;
-  font-size: 14px;
-  color: var(--tag-red);
-}
-
-/* ---- Home: carregamento / erro / vazio ---- */
-.loading {
-  margin: 24px 0;
-  color: var(--ink-soft);
-}
-.load-error {
-  display: grid;
-  gap: 12px;
-  justify-items: start;
-  margin: 24px 0;
-}
-.empty-state {
-  display: grid;
-  gap: 14px;
-  justify-items: start;
-  margin: 24px 0;
-}
-
-/* sticker inteiro clicável (herói e seções VENCIDOS/VENCE EM BREVE) */
-.asset-link {
-  display: block;
-  color: inherit;
-  text-decoration: none;
 }
 
 /* ---- Home: lista ATIVOS — linha simples + dots de contagem ---- */
@@ -412,28 +486,6 @@ h2 {
 .count-dot--on.count-dot--vencido { background: var(--tag-red); }
 .count-dot--on.count-dot--vence_em_breve { background: var(--tag-amber); }
 .count-dot--on.count-dot--ok { background: var(--tag-green); }
-
-/* ---- FAB: cadastrar ativo, fixo no canto (acima da tabbar da Home) ---- */
-.fab {
-  position: fixed;
-  right: 18px;
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  z-index: 10;
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--workshop-blue);
-  color: var(--workshop-blue-ink);
-  font-family: "Saira Condensed", system-ui, sans-serif;
-  font-size: 30px;
-  font-weight: 600;
-  line-height: 1;
-  box-shadow: var(--shadow-2);
-  cursor: pointer;
-}
 
 /* ---- Ativo: ordem de serviço ---- */
 .workorder {
@@ -751,48 +803,4 @@ h2 {
   margin-top: 28px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
-}
-
-/* ---- update bar: nova versão do PWA disponível ----
-   Barra discreta no rodapé (mesmo tom do toast: --ink com texto --paper, só
-   que persistente e clicável). Sobra a tabbar nas telas "de bolso". */
-.update-bar {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  z-index: 25;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 10px 10px 16px;
-  background: var(--ink);
-  color: var(--paper);
-  border-radius: 8px;
-  box-shadow: var(--shadow-2);
-  font-size: 14px;
-}
-.update-bar__btn {
-  padding: 8px 14px;
-  border: 1px solid var(--paper);
-  border-radius: 8px;
-  background: var(--ink);
-  color: var(--paper);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* ---- acessibilidade ---- */
-:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition: none !important;
-    animation: none !important;
-  }
 }
