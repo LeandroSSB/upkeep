@@ -100,6 +100,8 @@ public static class ImportEndpoints
                 return AssetInvalido(i, $"notas não pode passar de {MaxNotas} caracteres ({asset.Notas.Length})");
             if (asset.OdometroAtual is < 0)
                 return AssetInvalido(i, $"odometroAtual não pode ser negativo ({asset.OdometroAtual})");
+            if (asset.OdometroAtual is not null && tipo != AssetTipo.Veiculo)
+                return AssetInvalido(i, "odômetro só é permitido para veículos");
 
             foreach (var (tpl, j) in (asset.Templates ?? []).Select((t, j) => (t, j)))
             {

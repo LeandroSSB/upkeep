@@ -187,6 +187,7 @@ function SettingsForm({ me: initialMe }: { me: Me }) {
       if (!Array.isArray(parsed.assets)) throw new Error();
       setPending({ text, assets: parsed.assets.length });
     } catch {
+      setPending(null); // arquivo inválido descarta o preview antigo (senão o confirm continua na tela)
       setImportError("Arquivo inválido");
     }
   }
