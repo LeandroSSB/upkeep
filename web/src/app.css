@@ -1,4 +1,4 @@
-/* upkeep — estilo base v2 "prontuário de oficina". Todo valor vem de tokens.css. */
+/* upkeep — estilo base v3 "caderneta de serviços". Todo valor vem de tokens.css. */
 
 /* ---- reset mínimo ---- */
 *,
@@ -8,16 +8,14 @@
   margin: 0;
 }
 
-/* a folha da prancheta: porcelana fria + papel milimetrado 24px (a régua
-   desenha o "medir" — o app inteiro é medição de intervalos) */
+/* a página do caderno: marfim + pauta horizontal a cada 32px (só linhas
+   horizontais — caderno pautado, não milimetrado; o registro é o ritmo) */
 body {
-  background:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
-    var(--paper);
-  background-size: 24px 24px, 24px 24px, auto;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px);
+  background-size: 100% 32px;
+  background-color: var(--paper);
   color: var(--ink);
-  font: 400 16px/1.55 "Barlow", system-ui, sans-serif;
+  font: 400 16px/1.6 "Public Sans", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -39,23 +37,21 @@ a {
   color: var(--accent);
 }
 
-/* ---- tipografia (escala do contract v2) ---- */
+/* ---- tipografia (escala do contract v3: serif em sentence case) ---- */
 h1 {
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-weight: 700;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
   font-size: 30px;
-  line-height: 1.05;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-wrap: pretty;
 }
 
 h2 {
-  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-family: "Fraunces", Georgia, serif;
   font-weight: 600;
   font-size: 20px;
-  line-height: 1.15;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-wrap: pretty;
 }
 
 /* ---- shell: coluna única de bolso, não estica no desktop ---- */
@@ -65,26 +61,25 @@ h2 {
   padding: 0 16px 80px; /* 80px: espaço p/ a tabbar fixa */
 }
 
-/* ---- header do app: transparente — o milimetrado corre contínuo atrás ---- */
+/* ---- header do app: hairline sobre a pauta contínua ---- */
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin: 0 -16px;
-  padding: 14px 16px;
-  border-bottom: 1.5px solid var(--line);
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
 }
 
 .wordmark {
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 27px;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 24px;
   line-height: 1;
-  letter-spacing: 0.02em;
 }
 
-/* lâmpada quadrada do pior status global (v2: quadrado na régua, não bolinha) */
+/* quadrado do pior status global (continua o da v2 — é informação) */
 .lamp {
   flex: none;
   width: 10px;
@@ -98,21 +93,20 @@ h2 {
 
 /* ---- eyebrow: label de seção ---- */
 .eyebrow {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-soft);
-  margin: 24px 0 8px;
+  margin: 28px 0 10px;
 }
 
-/* display-xl: o número grande (mostrador da Home, total dos Relatórios) */
+/* display-xl: o número grande (total dos Relatórios) */
 .display-xl {
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 44px;
-  line-height: 1;
-  letter-spacing: 0.01em;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 42px;
+  line-height: 1.05;
 }
 
 /* ---- botões ---- */
@@ -121,13 +115,17 @@ h2 {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 12px 18px;
   border: 1.5px solid var(--line);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--card);
   color: var(--ink);
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
 .btn:active {
   transform: translateY(1px);
@@ -136,6 +134,10 @@ h2 {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
+}
+.btn--primary:hover {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
 }
 
 /* ---- campos de formulário ---- */
@@ -166,7 +168,7 @@ h2 {
   color: var(--ink-soft);
 }
 .input-mono {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "Spline Sans Mono", ui-monospace, monospace;
 }
 .form-actions {
   display: flex;
@@ -216,7 +218,7 @@ h2 {
   font-weight: 500;
 }
 
-/* ---- tabbar: navegação inferior das telas "de bolso" ---- */
+/* ---- tabbar: navegação inferior das telas "de bolso" (sentence case) ---- */
 .tabbar {
   position: fixed;
   left: 50%;
@@ -226,21 +228,18 @@ h2 {
   max-width: 640px;
   display: flex;
   justify-content: space-around;
-  background: var(--card);
-  border-top: 1.5px solid var(--line);
+  background: var(--paper);
+  border-top: 1px solid var(--line);
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
 }
 .tabbar a {
   display: grid;
   justify-items: center;
-  gap: 2px;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  gap: 3px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--ink-soft);
   text-decoration: none;
 }
@@ -309,11 +308,10 @@ h2 {
   width: 56px;
   height: 56px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--accent);
   color: var(--accent-ink);
-  font-family: "Barlow Condensed", system-ui, sans-serif;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 600;
   line-height: 1;
   box-shadow: var(--shadow-2);

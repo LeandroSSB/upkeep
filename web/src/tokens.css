@@ -1,60 +1,61 @@
-/* Design tokens v2 — "prontuário de oficina": papel milimetrado frio, plaquetas
-   chanfradas e um mostrador aceso para o que vence (DESIGN CONTRACT v2 em
-   docs/superpowers/plans/2026-10-03-upkeep-web-redesign.md).
+/* Design tokens v3 — "caderneta de serviços": papel marfim pautado, tinta
+   sépia, verbetes com hairline e o carimbo violeta oficializando status
+   (DESIGN CONTRACT v3 em docs/superpowers/plans/2026-10-03-upkeep-web-redesign-v3.md).
 
-   Tema: claro é o :root base; escuro ("painel à noite") entra por DOIS gatilhos
+   Tema: claro é o :root base; escuro ("capa à noite") entra por DOIS gatilhos
    com os MESMOS valores — escolha explícita (data-theme="dark", setado pelo
    toggle/lib theme.ts) ou o SO pedindo escuro quando o usuário não travou o
    claro (:not([data-theme="light"])). color-scheme leva inputs/scrollbars juntos. */
 :root {
   color-scheme: light dark;
-  --paper: #E9EEEF;        /* porcelana fria: a folha da prancheta */
-  --grid: #D8E1E2;         /* linha do papel milimetrado (24px no body) */
-  --card: #FFFFFF;         /* plaqueta */
-  --ink: #16232A;          /* grafite-azulado */
-  --ink-soft: #55666D;     /* texto secundário */
-  --line: #CBD6D8;         /* hairlines, bordas */
-  --tag-red: #B3372A;      /* vencido */
-  --tag-amber: #8A6100;    /* vence_em_breve */
-  --tag-green: #22774B;    /* ok */
-  --accent: #0C5A58;       /* petróleo: interativo */
-  --accent-ink: #FFFFFF;
-  --panel: #14262B;        /* mostrador aceso (herói, odômetro) */
-  --panel-ink: #E6F0EE;
-  --panel-soft: #9DB8B4;
-  /* lâmpadas do painel: constantes nos 2 temas (o painel é sempre escuro) */
-  --lamp-red: #E0604E;
-  --lamp-amber: #D9A545;
-  --lamp-green: #57B37C;
-  --focus-ring: 0 0 0 3px rgba(12, 90, 88, 0.35);
-  /* glow do mostrador (filter inteiro tokenizado: valor difere por tema) */
-  --panel-glow: drop-shadow(0 12px 28px rgba(9, 58, 56, 0.45));
-  --shadow-1: 0 1px 2px rgba(22, 35, 42, 0.08);  /* repouso */
-  --shadow-2: 0 3px 10px rgba(22, 35, 42, 0.18); /* flutuante: toast, FAB */
+  --paper: #F4EFE3;        /* marfim: a página do caderno */
+  --grid: #E4DCC9;         /* pauta horizontal (32px no body) */
+  --card: #FCF9F1;         /* folha: MAIS clara que o papel (profundidade por camada) */
+  --ink: #2B2117;          /* sépia-grafite, nunca #000 */
+  --ink-soft: #6E6153;     /* texto secundário */
+  --line: #DDD3BE;         /* hairline bege */
+  --tag-red: #A63A26;      /* lacre: vencido */
+  --tag-amber: #8A6100;    /* ocre: vence_em_breve */
+  --tag-green: #2E6B48;    /* ramagem: ok */
+  --accent: #5B3E76;       /* violeta-carimbo: interativo (o único risco v3) */
+  --accent-ink: #FCF9F1;
+  --accent-deep: #48305F;  /* hover/active do accent */
+  --panel: #2E2418;        /* capa espresso (herói, odômetro) */
+  --panel-ink: #F1E9D7;
+  --panel-soft: #B4A88F;
+  /* tintas do carimbo NA CAPA: constantes nos 2 temas (a capa é sempre escura) */
+  --stamp-red: #E2684F;
+  --stamp-amber: #D9A545;
+  --stamp-green: #63B585;
+  --focus-ring: 0 0 0 3px rgba(91, 62, 118, 0.35);
+  /* SOMENTE flutuantes (toast/update-bar/FAB) — profundidade vem da cor, v3
+     não tem --shadow-1 (lição do órfão v2) */
+  --shadow-2: 0 8px 30px rgba(43, 33, 23, 0.16);
+  /* LEGADO v2 (o .panel antigo lê até a Task 2 substituí-lo): */
+  --panel-glow: drop-shadow(0 10px 24px rgba(43, 33, 23, 0.3));
 }
 
 /* Escuro explícito (toggle "Escuro"). */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #0F191C;
-  --grid: rgba(230, 240, 238, 0.05);
-  --card: #172428;
-  --ink: #E2EBE9;
-  --ink-soft: #93A5A6;
-  --line: #243237;
-  --tag-red: #E0604E;
+  --paper: #201A13;
+  --grid: rgba(241, 233, 215, 0.05);
+  --card: #2A2218;
+  --ink: #EFE7D6;
+  --ink-soft: #A89C87;
+  --line: #3B3224;
+  --tag-red: #E2684F;
   --tag-amber: #D9A545;
-  --tag-green: #57B37C;
-  --accent: #6FC8C1;
-  --accent-ink: #0F191C;
-  --panel: #1B2E2A; /* mais claro e esverdeado que o card: aceso, o mostrador EMITE luz */
-  --panel-ink: #E6F0EE;
-  --panel-soft: #9DB8B4;
-  --focus-ring: 0 0 0 3px rgba(111, 200, 193, 0.4);
-  /* escuro: halo teal fraco (a retroiluminação) + sombra de profundidade */
-  --panel-glow: drop-shadow(0 0 26px rgba(111, 200, 193, 0.16)) drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-  --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.55);
+  --tag-green: #63B585;
+  --accent: #C7A2E6;
+  --accent-ink: #201A13;
+  --accent-deep: #B892DC;
+  --panel: #382D1C; /* mais claro e quente que o card: a página iluminada */
+  --panel-ink: #F1E9D7;
+  --panel-soft: #B4A88F;
+  --focus-ring: 0 0 0 3px rgba(199, 162, 230, 0.4);
+  --shadow-2: 0 8px 30px rgba(0, 0, 0, 0.55);
+  --panel-glow: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
 }
 
 /* Escuro pelo SO ("Automático"): vale a menos que o usuário tenha travado
@@ -62,24 +63,24 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --paper: #0F191C;
-    --grid: rgba(230, 240, 238, 0.05);
-    --card: #172428;
-    --ink: #E2EBE9;
-    --ink-soft: #93A5A6;
-    --line: #243237;
-    --tag-red: #E0604E;
+    --paper: #201A13;
+    --grid: rgba(241, 233, 215, 0.05);
+    --card: #2A2218;
+    --ink: #EFE7D6;
+    --ink-soft: #A89C87;
+    --line: #3B3224;
+    --tag-red: #E2684F;
     --tag-amber: #D9A545;
-    --tag-green: #57B37C;
-    --accent: #6FC8C1;
-    --accent-ink: #0F191C;
-    --panel: #1B2E2A; /* aceso: emite luz (mais claro que o card) */
-    --panel-ink: #E6F0EE;
-    --panel-soft: #9DB8B4;
-    --focus-ring: 0 0 0 3px rgba(111, 200, 193, 0.4);
-    --panel-glow: drop-shadow(0 0 26px rgba(111, 200, 193, 0.16)) drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
-    --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.55);
+    --tag-green: #63B585;
+    --accent: #C7A2E6;
+    --accent-ink: #201A13;
+    --accent-deep: #B892DC;
+    --panel: #382D1C;
+    --panel-ink: #F1E9D7;
+    --panel-soft: #B4A88F;
+    --focus-ring: 0 0 0 3px rgba(199, 162, 230, 0.4);
+    --shadow-2: 0 8px 30px rgba(0, 0, 0, 0.55);
+    --panel-glow: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
   }
 }
 
