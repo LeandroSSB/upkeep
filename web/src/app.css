@@ -176,11 +176,12 @@ h2 {
 }
 
 /* ---- form-card: o formulário mora numa plaqueta ---- */
+/* Chanfro por gradiente de canto (não clip-path): o drop-shadow segue o
+   alpha e a plaqueta ganha a sombra no corte (clip-path cortaria o filter). */
 .form-card {
   padding: 16px 16px 18px;
   margin-bottom: 16px;
-  background: var(--card);
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  background: linear-gradient(225deg, transparent 20px, var(--card) 20px);
   filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
 }
 
@@ -361,12 +362,11 @@ h2 {
   }
 }
 
-/* ---- plaqueta: chanfro + régua ---- */
+/* ---- plaqueta: chanfro (gradiente de canto) + régua ---- */
 .tag {
   margin-bottom: 10px;
   padding: 12px 14px 14px;
-  background: var(--card);
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  background: linear-gradient(225deg, transparent 20px, var(--card) 20px);
   filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
 }
 .tag__title {
@@ -409,12 +409,12 @@ h2 {
 .tag--vence_em_breve .gauge__fill { background: var(--tag-amber); }
 
 /* ---- mostrador aceso (herói da Home) ---- */
+/* Chanfro por gradiente (idem plaqueta) para o glow do drop-shadow respirar. */
 .panel {
   margin: 10px 0 16px;
   padding: 16px 18px 18px;
-  background: var(--panel);
+  background: linear-gradient(225deg, transparent 22px, var(--panel) 22px);
   color: var(--panel-ink);
-  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
   filter: drop-shadow(0 10px 24px rgba(9, 58, 56, 0.35));
 }
 .panel__eyebrow {
@@ -550,8 +550,7 @@ h2 {
 .workorder {
   margin-top: 16px;
   padding: 16px 18px 18px;
-  background: var(--card);
-  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+  background: linear-gradient(225deg, transparent 22px, var(--card) 22px);
   filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
 }
 .workorder__meta {
@@ -709,8 +708,7 @@ h2 {
   display: grid;
   gap: 10px;
   padding: 14px 16px;
-  background: var(--card);
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  background: linear-gradient(225deg, transparent 20px, var(--card) 20px);
   filter: drop-shadow(0 1px 1px rgba(22, 35, 42, 0.12));
 }
 .wo-confirm > p {
